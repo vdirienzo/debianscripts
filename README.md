@@ -11,6 +11,7 @@ Coleccion de scripts de mantenimiento y actualizacion para distribuciones basada
   - [Requisitos del Sistema](#requisitos-del-sistema)
   - [Instalacion y Uso](#instalacion-y-uso)
   - [Configuracion Avanzada](#configuracion-avanzada)
+  - [Screenshots](#screenshots)
   - [Menu Interactivo](#menu-interactivo)
   - [Ejemplos de Uso](#ejemplos-de-uso)
 - [Solucion de Problemas](#solucion-de-problemas)
@@ -196,6 +197,18 @@ STEP_UPGRADE_SYSTEM=0
 STEP_UPDATE_FLATPAK=0
 STEP_UPDATE_SNAP=0
 ```
+
+---
+
+## Screenshots
+
+### Resumen de Ejecucion
+
+El script muestra un resumen detallado al finalizar con el estado de cada paso:
+
+![Resumen de Ejecucion 1](screenshots/resumen-ejecucion-1.png)
+
+![Resumen de Ejecucion 2](screenshots/resumen-ejecucion-2.png)
 
 ---
 

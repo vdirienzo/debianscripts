@@ -58,13 +58,14 @@ La deteccion se realiza automaticamente usando `/etc/os-release` y el script ada
 ### Nuevas en v2025.11
 
 - **Interfaz Enterprise 100% ASCII**: UI sin emojis para compatibilidad total con cualquier terminal
+- **Alineacion robusta con cursor absoluto**: Usa `\033[78G` para garantizar bordes perfectos (PR #3)
 - **Menu en 3 columnas**: Visualizacion compacta de los 13 pasos en grid 5x3
 - **Resumen en 3 columnas**: El reporte final muestra todos los pasos de forma compacta
 - **Navegacion mejorada**: Flechas ←/→ para columnas, ↑/↓ para filas
 - **Iconos ASCII puros**: `[OK]`, `[XX]`, `[--]`, `[!!]`, `[..]` para alineacion perfecta
 - **Sin emojis**: Eliminados todos los emojis para evitar problemas de alineacion
-- **Funciones UI reutilizables**: `print_box_line()`, `print_box_center()`, `display_width()`
-- **Contribucion de Dreadblitz**: Mejoras UX/UI basadas en PR #2
+- **Funciones UI modulares**: `print_box_line()`, `print_box_center()`, `print_box_top()`, `print_box_bottom()`
+- **Contribucion de Dreadblitz**: Mejoras UX/UI (PR #2) y alineacion robusta (PR #3)
 
 ### Nuevas en v2025.10
 
@@ -507,7 +508,7 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 - **Scripts totales:** 1
 - **Script principal:** autoclean.sh
 - **Version actual:** 2025.11
-- **Lineas de codigo:** ~1900+
+- **Lineas de codigo:** ~2000+
 - **Pasos modulares:** 13
 - **Distribuciones soportadas:** 7+ (auto-deteccion)
 - **Compatible con:** Debian, Ubuntu, Mint, Pop!_OS, Elementary, Zorin, Kali y derivadas

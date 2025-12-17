@@ -236,6 +236,8 @@ MSG_NEEDRESTART_NOT_INSTALLED="needrestart no disponible (recomendado instalarlo
 MSG_REBOOT_REQUIRED="REINICIO REQUERIDO"
 MSG_REBOOT_NOT_REQUIRED="No se requiere reinicio"
 MSG_REBOOTING_IN="Reiniciando en 5 segundos... (Ctrl+C para cancelar)"
+MSG_STAT_REQUIRED="REQUERIDO"
+MSG_STAT_NOT_NEEDED="No necesario"
 
 # === MESSAGES - SUMMARY ===
 MSG_SUMMARY_STATUS="Estado"
@@ -296,6 +298,22 @@ MSG_DISTRO_CODENAME="Codename"
 MSG_DISTRO_MIRROR="Mirror de verificacion"
 MSG_DISTRO_NOT_SUPPORTED="Distribucion no soportada: %s. Este script solo soporta distribuciones basadas en Debian/Ubuntu."
 MSG_DISTRO_NOT_DETECTED="No se puede detectar la distribucion. Archivo /etc/os-release no encontrado."
+
+# === MESSAGES - LOG AND CLI ===
+MSG_LOG_CRITICAL="CRITICO"
+MSG_EXECUTING="Ejecutando"
+MSG_STEP_PREFIX="PASO"
+MSG_DEPS_VALIDATION_OK="Validacion de dependencias OK"
+MSG_UPGRADE_WITHOUT_REPOS="No puedes actualizar el sistema (STEP_UPGRADE_SYSTEM=1) sin actualizar repositorios (STEP_UPDATE_REPOS=0). Activa STEP_UPDATE_REPOS."
+MSG_KERNEL_CLEANUP_RISKY="Limpieza de kernels sin snapshot de Timeshift puede ser riesgoso"
+MSG_SKIPPING_TOOL_CHECK="Omitiendo verificacion de %s (paso desactivado)"
+MSG_KERNEL_FORCING_INCLUSION="Kernel actual no esta en los mas recientes, forzando inclusion"
+MSG_UCSTA_STATUS="Estado UCSTA (librerias criticas)"
+MSG_MAINTENANCE_COMPLETED="Mantenimiento completado en %dm %ds"
+MSG_STARTING_MAINTENANCE="Iniciando Mantenimiento"
+MSG_UNKNOWN_OPTION="Opcion desconocida"
+MSG_USE_HELP="Usa --help para ver las opciones disponibles"
+MSG_PROCESS_ABORTED="PROCESO ABORTADO"
 
 # === HELP TEXT ===
 HELP_TITLE="Mantenimiento Integral para Distribuciones basadas en Debian/Ubuntu"

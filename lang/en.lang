@@ -237,6 +237,8 @@ MSG_NEEDRESTART_NOT_INSTALLED="needrestart not available (recommended to install
 MSG_REBOOT_REQUIRED="REBOOT REQUIRED"
 MSG_REBOOT_NOT_REQUIRED="Reboot not required"
 MSG_REBOOTING_IN="Rebooting in 5 seconds... (Ctrl+C to cancel)"
+MSG_STAT_REQUIRED="REQUIRED"
+MSG_STAT_NOT_NEEDED="Not needed"
 
 # === MESSAGES - SUMMARY ===
 MSG_SUMMARY_STATUS="Status"
@@ -297,6 +299,22 @@ MSG_DISTRO_CODENAME="Codename"
 MSG_DISTRO_MIRROR="Verification mirror"
 MSG_DISTRO_NOT_SUPPORTED="Unsupported distribution: %s. This script only supports Debian/Ubuntu based distributions."
 MSG_DISTRO_NOT_DETECTED="Cannot detect distribution. /etc/os-release file not found."
+
+# === MESSAGES - LOG AND CLI ===
+MSG_LOG_CRITICAL="CRITICAL"
+MSG_EXECUTING="Executing"
+MSG_STEP_PREFIX="STEP"
+MSG_DEPS_VALIDATION_OK="Dependency validation OK"
+MSG_UPGRADE_WITHOUT_REPOS="You cannot upgrade the system (STEP_UPGRADE_SYSTEM=1) without updating repos (STEP_UPDATE_REPOS=0). Enable STEP_UPDATE_REPOS."
+MSG_KERNEL_CLEANUP_RISKY="Kernel cleanup without Timeshift snapshot may be risky"
+MSG_SKIPPING_TOOL_CHECK="Skipping verification of %s (step disabled)"
+MSG_KERNEL_FORCING_INCLUSION="Current kernel not in most recent list, forcing inclusion"
+MSG_UCSTA_STATUS="UCSTA status (critical libraries)"
+MSG_MAINTENANCE_COMPLETED="Maintenance completed in %dm %ds"
+MSG_STARTING_MAINTENANCE="Starting Maintenance"
+MSG_UNKNOWN_OPTION="Unknown option"
+MSG_USE_HELP="Use --help to see available options"
+MSG_PROCESS_ABORTED="PROCESS ABORTED"
 
 # === HELP TEXT ===
 HELP_TITLE="Comprehensive Maintenance for Debian/Ubuntu Based Distributions"

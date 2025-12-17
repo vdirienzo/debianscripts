@@ -139,7 +139,13 @@ CONFIG_FILE="${SCRIPT_DIR}/autoclean.conf"
 BACKUP_DIR="/var/backups/debian-maintenance"
 LOCK_FILE="/var/run/debian-maintenance.lock"
 LOG_DIR="/var/log/debian-maintenance"
-SCRIPT_VERSION="2025.11"
+SCRIPT_VERSION="2025.12"
+
+# Configuración de idioma
+LANG_DIR="${SCRIPT_DIR}/lang"
+DEFAULT_LANG="en"
+CURRENT_LANG=""
+AVAILABLE_LANGS=("en" "es")
 
 # Parámetros de sistema
 DIAS_LOGS=7
@@ -278,12 +284,16 @@ MENU_STEP_DESCRIPTIONS=(
 # ============================================================================
 
 save_config() {
-    # Guardar estado actual de los pasos en archivo de configuración
+    # Guardar estado actual de los pasos y preferencias en archivo de configuración
     cat > "$CONFIG_FILE" << EOF
 # Configuración de autoclean - Generado automáticamente
 # Fecha: $(date '+%Y-%m-%d %H:%M:%S')
 # No editar manualmente (usar el menú interactivo)
 
+# Idioma / Language
+SAVED_LANG=$CURRENT_LANG
+
+# Pasos / Steps
 STEP_CHECK_CONNECTIVITY=$STEP_CHECK_CONNECTIVITY
 STEP_CHECK_DEPENDENCIES=$STEP_CHECK_DEPENDENCIES
 STEP_BACKUP_TAR=$STEP_BACKUP_TAR
@@ -323,6 +333,71 @@ config_exists() {
 
 delete_config() {
     rm -f "$CONFIG_FILE" 2>/dev/null
+}
+
+# ============================================================================
+# FUNCIONES DE IDIOMA (i18n)
+# ============================================================================
+
+load_language() {
+    local lang_to_load="$1"
+
+    # Si no se especifica idioma, detectar automáticamente
+    if [ -z "$lang_to_load" ]; then
+        # Prioridad: 1) Config guardada, 2) Variable de entorno, 3) Sistema, 4) Default
+        if [ -n "$SAVED_LANG" ]; then
+            lang_to_load="$SAVED_LANG"
+        elif [ -n "$AUTOCLEAN_LANG" ]; then
+            lang_to_load="$AUTOCLEAN_LANG"
+        else
+            # Detectar idioma del sistema
+            local sys_lang="${LANG%%_*}"
+            sys_lang="${sys_lang%%.*}"
+            lang_to_load="${sys_lang:-$DEFAULT_LANG}"
+        fi
+    fi
+
+    # Verificar que el idioma existe
+    local lang_file="${LANG_DIR}/${lang_to_load}.lang"
+    if [ ! -f "$lang_file" ]; then
+        # Fallback a idioma por defecto
+        lang_file="${LANG_DIR}/${DEFAULT_LANG}.lang"
+        lang_to_load="$DEFAULT_LANG"
+    fi
+
+    # Cargar archivo de idioma
+    if [ -f "$lang_file" ]; then
+        source "$lang_file"
+        CURRENT_LANG="$lang_to_load"
+        return 0
+    else
+        # Fallback crítico: usar inglés hardcodeado mínimo
+        echo "ERROR: No language files found in $LANG_DIR"
+        exit 1
+    fi
+}
+
+show_language_selector() {
+    clear
+    echo -e "${BLUE}╔$(printf '═%.0s' $(seq 1 $BOX_INNER))╗${NC}"
+    print_box_center "${BOLD}${MENU_LANGUAGE_TITLE}${NC}"
+    echo -e "${BLUE}╠$(printf '═%.0s' $(seq 1 $BOX_INNER))╣${NC}"
+    print_box_line ""
+    print_box_line "   ${CYAN}[1]${NC} English"
+    print_box_line "   ${CYAN}[2]${NC} Español"
+    print_box_line ""
+    echo -e "${BLUE}╠$(printf '═%.0s' $(seq 1 $BOX_INNER))╣${NC}"
+    print_box_line "${MENU_LANGUAGE_PROMPT}"
+    echo -e "${BLUE}╚$(printf '═%.0s' $(seq 1 $BOX_INNER))╝${NC}"
+
+    local key=""
+    read -rsn1 key
+
+    case "$key" in
+        '1') load_language "en" ;;
+        '2') load_language "es" ;;
+        *) return ;;
+    esac
 }
 
 # ============================================================================
@@ -944,7 +1019,7 @@ show_interactive_menu() {
         print_box_sep
         print_box_line "Seleccionados: ${GREEN}${active_count}${NC}/${total_items}    Perfil: $(config_exists && echo "${GREEN}Guardado${NC}" || echo "${DIM}Sin guardar${NC}")"
         print_box_sep
-        print_box_center "${CYAN}[ENTER]${NC} Ejecutar ${CYAN}[A]${NC} Todos ${CYAN}[N]${NC} Ninguno ${CYAN}[G]${NC} Guardar ${CYAN}[Q]${NC} Salir"
+        print_box_center "${CYAN}[ENTER]${NC} ${MENU_CTRL_ENTER} ${CYAN}[A]${NC} ${MENU_CTRL_ALL} ${CYAN}[N]${NC} ${MENU_CTRL_NONE} ${CYAN}[G]${NC} ${MENU_CTRL_SAVE} ${CYAN}[L]${NC} ${MENU_CTRL_LANG} ${CYAN}[Q]${NC} ${MENU_CTRL_QUIT}"
         print_box_bottom
 
         # Leer tecla
@@ -1003,7 +1078,8 @@ show_interactive_menu() {
                 'n'|'N') for var_name in "${MENU_STEP_VARS[@]}"; do eval "$var_name=0"; done ;;
                 'g'|'G') save_config ;;
                 'd'|'D') config_exists && delete_config ;;
-                'q'|'Q') tput cnorm 2>/dev/null; die "Cancelado por el usuario" ;;
+                'l'|'L') show_language_selector ;;
+                'q'|'Q') tput cnorm 2>/dev/null; die "${MSG_CANCELLED_BY_USER}" ;;
             esac
         fi
     done
@@ -1951,6 +2027,15 @@ while [[ $# -gt 0 ]]; do
             NO_MENU=true
             shift
             ;;
+        --lang)
+            if [ -n "$2" ]; then
+                AUTOCLEAN_LANG="$2"
+                shift 2
+            else
+                echo "Error: --lang requires a language code (en, es)"
+                exit 1
+            fi
+            ;;
         --help)
             cat << 'EOF'
 Mantenimiento Integral para Distribuciones basadas en Debian/Ubuntu
@@ -1997,6 +2082,14 @@ done
 # EJECUCIÓN MAESTRA
 # ============================================================================
 
+# Cargar configuración guardada si existe (para obtener SAVED_LANG antes de cargar idioma)
+if config_exists; then
+    load_config
+fi
+
+# Cargar idioma (usa SAVED_LANG si existe, o detecta del sistema)
+load_language
+
 # Verificar permisos de root ANTES de cualquier operación
 check_root
 
@@ -2011,12 +2104,6 @@ check_lock
 
 # Detectar distribución (debe ejecutarse antes de print_header)
 detect_distro
-
-# Cargar configuración guardada si existe
-if config_exists; then
-    load_config
-    log "INFO" "Configuración cargada desde $CONFIG_FILE"
-fi
 
 # Contar pasos iniciales
 count_active_steps

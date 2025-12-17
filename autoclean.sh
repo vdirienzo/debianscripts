@@ -145,7 +145,7 @@ SCRIPT_VERSION="2025.12"
 LANG_DIR="${SCRIPT_DIR}/lang"
 DEFAULT_LANG="en"
 CURRENT_LANG=""
-AVAILABLE_LANGS=("en" "es")
+AVAILABLE_LANGS=("en" "es" "pt" "fr" "de" "it")
 
 # Parámetros de sistema
 DIAS_LOGS=7
@@ -230,22 +230,10 @@ NO_MENU=false
 # CONFIGURACIÓN DEL MENÚ INTERACTIVO
 # ============================================================================
 
-# Arrays para el menú interactivo (índice corresponde a cada paso)
-MENU_STEP_NAMES=(
-    "Verificar conectividad"
-    "Verificar dependencias"
-    "Backup configuraciones (tar)"
-    "Snapshot Timeshift"
-    "Actualizar repositorios"
-    "Actualizar sistema (APT)"
-    "Actualizar Flatpak"
-    "Actualizar Snap"
-    "Verificar firmware"
-    "Limpieza APT"
-    "Limpieza kernels"
-    "Limpieza disco/logs"
-    "Verificar reinicio"
-)
+# Arrays para el menú interactivo (se llenan desde archivo de idioma)
+declare -a MENU_STEP_NAMES
+declare -a MENU_STEP_DESCRIPTIONS
+declare -a STEP_SHORT_NAMES
 
 MENU_STEP_VARS=(
     "STEP_CHECK_CONNECTIVITY"
@@ -263,21 +251,56 @@ MENU_STEP_VARS=(
     "STEP_CHECK_REBOOT"
 )
 
-MENU_STEP_DESCRIPTIONS=(
-    "Verifica conexion a internet antes de continuar"
-    "Instala herramientas necesarias (timeshift, needrestart, etc.)"
-    "Guarda configuraciones APT en /var/backups"
-    "Crea snapshot con Timeshift para rollback (RECOMENDADO)"
-    "Ejecuta apt update para actualizar lista de paquetes"
-    "Ejecuta apt full-upgrade para actualizar paquetes"
-    "Actualiza aplicaciones instaladas con Flatpak"
-    "Actualiza aplicaciones instaladas con Snap"
-    "Verifica actualizaciones de BIOS/dispositivos (fwupd)"
-    "Elimina paquetes huerfanos y residuales"
-    "Elimina kernels antiguos (mantiene 3)"
-    "Limpia logs antiguos y cache del sistema"
-    "Detecta si el sistema necesita reiniciarse"
-)
+# Función para actualizar arrays desde variables de idioma
+update_language_arrays() {
+    MENU_STEP_NAMES=(
+        "$STEP_NAME_1"
+        "$STEP_NAME_2"
+        "$STEP_NAME_3"
+        "$STEP_NAME_4"
+        "$STEP_NAME_5"
+        "$STEP_NAME_6"
+        "$STEP_NAME_7"
+        "$STEP_NAME_8"
+        "$STEP_NAME_9"
+        "$STEP_NAME_10"
+        "$STEP_NAME_11"
+        "$STEP_NAME_12"
+        "$STEP_NAME_13"
+    )
+
+    MENU_STEP_DESCRIPTIONS=(
+        "$STEP_DESC_1"
+        "$STEP_DESC_2"
+        "$STEP_DESC_3"
+        "$STEP_DESC_4"
+        "$STEP_DESC_5"
+        "$STEP_DESC_6"
+        "$STEP_DESC_7"
+        "$STEP_DESC_8"
+        "$STEP_DESC_9"
+        "$STEP_DESC_10"
+        "$STEP_DESC_11"
+        "$STEP_DESC_12"
+        "$STEP_DESC_13"
+    )
+
+    STEP_SHORT_NAMES=(
+        "$STEP_SHORT_1"
+        "$STEP_SHORT_2"
+        "$STEP_SHORT_3"
+        "$STEP_SHORT_4"
+        "$STEP_SHORT_5"
+        "$STEP_SHORT_6"
+        "$STEP_SHORT_7"
+        "$STEP_SHORT_8"
+        "$STEP_SHORT_9"
+        "$STEP_SHORT_10"
+        "$STEP_SHORT_11"
+        "$STEP_SHORT_12"
+        "$STEP_SHORT_13"
+    )
+}
 
 # ============================================================================
 # FUNCIONES DE CONFIGURACIÓN PERSISTENTE
@@ -369,6 +392,8 @@ load_language() {
     if [ -f "$lang_file" ]; then
         source "$lang_file"
         CURRENT_LANG="$lang_to_load"
+        # Actualizar arrays con textos del idioma cargado
+        update_language_arrays
         return 0
     else
         # Fallback crítico: usar inglés hardcodeado mínimo
@@ -378,26 +403,63 @@ load_language() {
 }
 
 show_language_selector() {
-    clear
-    echo -e "${BLUE}╔$(printf '═%.0s' $(seq 1 $BOX_INNER))╗${NC}"
-    print_box_center "${BOLD}${MENU_LANGUAGE_TITLE}${NC}"
-    echo -e "${BLUE}╠$(printf '═%.0s' $(seq 1 $BOX_INNER))╣${NC}"
-    print_box_line ""
-    print_box_line "   ${CYAN}[1]${NC} English"
-    print_box_line "   ${CYAN}[2]${NC} Español"
-    print_box_line ""
-    echo -e "${BLUE}╠$(printf '═%.0s' $(seq 1 $BOX_INNER))╣${NC}"
-    print_box_line "${MENU_LANGUAGE_PROMPT}"
-    echo -e "${BLUE}╚$(printf '═%.0s' $(seq 1 $BOX_INNER))╝${NC}"
+    # Nombres de idiomas para mostrar
+    local -a LANG_NAMES=("English" "Español" "Português" "Français" "Deutsch" "Italiano")
+    local selected=0
+    local total=${#AVAILABLE_LANGS[@]}
 
-    local key=""
-    read -rsn1 key
+    # Encontrar índice del idioma actual
+    for i in "${!AVAILABLE_LANGS[@]}"; do
+        if [[ "${AVAILABLE_LANGS[$i]}" == "$CURRENT_LANG" ]]; then
+            selected=$i
+            break
+        fi
+    done
 
-    case "$key" in
-        '1') load_language "en" ;;
-        '2') load_language "es" ;;
-        *) return ;;
-    esac
+    while true; do
+        clear
+        echo -e "${BLUE}╔$(printf '═%.0s' $(seq 1 $BOX_INNER))╗${NC}"
+        print_box_center "${BOLD}SELECT LANGUAGE / SELECCIONAR IDIOMA${NC}"
+        echo -e "${BLUE}╠$(printf '═%.0s' $(seq 1 $BOX_INNER))╣${NC}"
+        print_box_line ""
+
+        # Mostrar idiomas con el seleccionado resaltado
+        for i in "${!AVAILABLE_LANGS[@]}"; do
+            if [[ $i -eq $selected ]]; then
+                print_box_line "   ${BRIGHT_GREEN}▶ ${LANG_NAMES[$i]}${NC}"
+            else
+                print_box_line "     ${DIM}${LANG_NAMES[$i]}${NC}"
+            fi
+        done
+
+        print_box_line ""
+        echo -e "${BLUE}╠$(printf '═%.0s' $(seq 1 $BOX_INNER))╣${NC}"
+        print_box_line "[↑/↓] Navigate  [ENTER] Select  [ESC] Cancel"
+        echo -e "${BLUE}╚$(printf '═%.0s' $(seq 1 $BOX_INNER))╝${NC}"
+
+        # Leer tecla
+        local key=""
+        read -rsn1 key
+
+        # Detectar secuencias de escape (flechas)
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 -t 0.1 key
+            case "$key" in
+                '[A') # Flecha arriba
+                    ((selected--))
+                    [[ $selected -lt 0 ]] && selected=$((total - 1))
+                    ;;
+                '[B') # Flecha abajo
+                    ((selected++))
+                    [[ $selected -ge $total ]] && selected=0
+                    ;;
+            esac
+        elif [[ "$key" == "" ]]; then
+            # ENTER - seleccionar idioma
+            load_language "${AVAILABLE_LANGS[$selected]}"
+            return
+        fi
+    done
 }
 
 # ============================================================================
@@ -468,23 +530,6 @@ for i in {0..12}; do
     STEP_TIME_START[$i]=0
     STEP_TIME_END[$i]=0
 done
-
-# Nombres cortos de pasos (max 12 chars para 2 columnas)
-STEP_SHORT_NAMES=(
-    "Conectividad"
-    "Dependencias"
-    "Backup"
-    "Snapshot"
-    "Repos"
-    "Upgrade"
-    "Flatpak"
-    "Snap"
-    "Firmware"
-    "APT Clean"
-    "Kernels"
-    "Disco"
-    "Reinicio"
-)
 
 # ============================================================================
 # FUNCIONES UI ENTERPRISE

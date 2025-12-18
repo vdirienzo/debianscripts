@@ -155,6 +155,14 @@ CURRENT_THEME=""
 AVAILABLE_THEMES=()   # Se llena dinámicamente con detect_themes()
 THEME_NAMES=()        # Nombres para mostrar (de THEME_NAME en cada archivo)
 
+# Configuración de notificadores
+NOTIFIER_DIR="${SCRIPT_DIR}/plugins/notifiers"
+AVAILABLE_NOTIFIERS=()    # Se llena dinámicamente con detect_notifiers()
+NOTIFIER_NAMES=()         # Nombres para mostrar (de NOTIFIER_NAME en cada archivo)
+NOTIFIER_DESCRIPTIONS=()  # Descripciones de cada notificador
+declare -A NOTIFIER_ENABLED   # Estado habilitado/deshabilitado por código
+declare -A NOTIFIER_LOADED    # Notificadores cargados exitosamente
+
 # Parámetros de sistema
 DIAS_LOGS=7
 KERNELS_TO_KEEP=3
@@ -377,6 +385,30 @@ STEP_CLEANUP_DOCKER=$STEP_CLEANUP_DOCKER
 STEP_CHECK_SMART=$STEP_CHECK_SMART
 STEP_CHECK_REBOOT=$STEP_CHECK_REBOOT
 EOF
+
+    # Agregar sección de notificadores
+    cat >> "$CONFIG_FILE" << 'NOTIF_HEADER'
+
+# ============================================================================
+# NOTIFICACIONES / NOTIFICATIONS
+# ============================================================================
+NOTIF_HEADER
+
+    # Guardar estado habilitado/deshabilitado de cada notificador
+    for code in "${AVAILABLE_NOTIFIERS[@]}"; do
+        local enabled="${NOTIFIER_ENABLED[$code]:-0}"
+        echo "NOTIFIER_${code^^}_ENABLED=$enabled" >> "$CONFIG_FILE"
+    done
+
+    # Guardar configuraciones específicas de cada notificador
+    # Telegram
+    [ -n "$NOTIFIER_TELEGRAM_BOT_TOKEN" ] && echo "NOTIFIER_TELEGRAM_BOT_TOKEN=\"$NOTIFIER_TELEGRAM_BOT_TOKEN\"" >> "$CONFIG_FILE"
+    [ -n "$NOTIFIER_TELEGRAM_CHAT_ID" ] && echo "NOTIFIER_TELEGRAM_CHAT_ID=\"$NOTIFIER_TELEGRAM_CHAT_ID\"" >> "$CONFIG_FILE"
+    # Email
+    [ -n "$NOTIFIER_EMAIL_TO" ] && echo "NOTIFIER_EMAIL_TO=\"$NOTIFIER_EMAIL_TO\"" >> "$CONFIG_FILE"
+    [ -n "$NOTIFIER_EMAIL_FROM" ] && echo "NOTIFIER_EMAIL_FROM=\"$NOTIFIER_EMAIL_FROM\"" >> "$CONFIG_FILE"
+    [ -n "$NOTIFIER_EMAIL_SUBJECT_PREFIX" ] && echo "NOTIFIER_EMAIL_SUBJECT_PREFIX=\"$NOTIFIER_EMAIL_SUBJECT_PREFIX\"" >> "$CONFIG_FILE"
+
     local result=$?
 
     # Cambiar ownership al usuario que ejecutó sudo (no root)
@@ -415,11 +447,50 @@ validate_source_file() {
     return 0
 }
 
+# Validar archivo notifier (menos restrictivo que validate_source_file)
+# Los notifiers necesitan ejecutar comandos, pero bloqueamos patrones muy peligrosos
+validate_notifier_file() {
+    local file="$1"
+
+    # Verificar que el archivo existe y es legible
+    [[ ! -f "$file" || ! -r "$file" ]] && return 1
+
+    local content
+    content=$(grep -v '^\s*#' "$file" 2>/dev/null)
+
+    # Patrones realmente peligrosos a bloquear:
+    # - eval = ejecución de código arbitrario
+    # - source/. de URLs o variables = cargar código externo
+    # - curl/wget piped to bash/sh = ejecución remota
+    # - rm -rf / = destrucción del sistema
+    # - dd if= = escritura directa a disco
+    # - mkfs = formateo de discos
+    # - chmod 777 = permisos inseguros
+    local dangerous_patterns='eval\s|source\s+["\x27]?(https?://|\$)|^\s*\.\s+["\x27]?(https?://|\$)'
+    dangerous_patterns+='|curl.*\|\s*(ba)?sh|wget.*\|\s*(ba)?sh'
+    dangerous_patterns+='|rm\s+-rf\s+/[^a-zA-Z]|dd\s+if=|mkfs\.|chmod\s+777'
+
+    if echo "$content" | grep -qE "$dangerous_patterns" 2>/dev/null; then
+        log "WARN" "Archivo notifier rechazado: contiene patrones peligrosos"
+        return 1
+    fi
+
+    # Verificar que tiene las funciones básicas requeridas
+    if ! grep -q 'notifier_send\s*()' "$file" 2>/dev/null; then
+        log "WARN" "Archivo notifier rechazado: falta función notifier_send()"
+        return 1
+    fi
+
+    return 0
+}
+
 load_config() {
     # Cargar configuración si existe el archivo
     if [ -f "$CONFIG_FILE" ]; then
         if validate_source_file "$CONFIG_FILE" "config"; then
             source "$CONFIG_FILE"
+            # Aplicar configuración de notificadores
+            apply_notifier_config
             return 0
         else
             log "WARN" "Archivo de configuración no pasó validación de seguridad"
@@ -427,6 +498,17 @@ load_config() {
         fi
     fi
     return 1
+}
+
+apply_notifier_config() {
+    # Aplicar configuración guardada de notificadores al array NOTIFIER_ENABLED
+    # Las variables NOTIFIER_*_ENABLED se cargan del config file via source
+    for code in "${AVAILABLE_NOTIFIERS[@]}"; do
+        local var_name="NOTIFIER_${code^^}_ENABLED"
+        if [ -n "${!var_name}" ]; then
+            NOTIFIER_ENABLED["$code"]="${!var_name}"
+        fi
+    done
 }
 
 config_exists() {
@@ -1063,6 +1145,509 @@ show_theme_selector() {
 }
 
 # ============================================================================
+# SISTEMA DE NOTIFICADORES (Plugins)
+# ============================================================================
+
+detect_notifiers() {
+    AVAILABLE_NOTIFIERS=()
+    NOTIFIER_NAMES=()
+    NOTIFIER_DESCRIPTIONS=()
+
+    # Verificar que existe el directorio
+    [ ! -d "$NOTIFIER_DIR" ] && return
+
+    # Buscar todos los archivos .notifier
+    local notifier_file
+    for notifier_file in "$NOTIFIER_DIR"/*.notifier; do
+        [ -f "$notifier_file" ] || continue
+
+        # Extraer código del notificador (nombre del archivo sin extensión)
+        local code
+        code=$(basename "$notifier_file" .notifier)
+
+        # Extraer metadata del archivo
+        local name desc
+        name=$(grep -m1 '^NOTIFIER_NAME=' "$notifier_file" 2>/dev/null | cut -d'"' -f2)
+        desc=$(grep -m1 '^NOTIFIER_DESCRIPTION=' "$notifier_file" 2>/dev/null | cut -d'"' -f2)
+
+        # Si no tiene NOTIFIER_NAME, usar el código con primera letra mayúscula
+        [ -z "$name" ] && name="${code^}"
+        [ -z "$desc" ] && desc="$name notifier"
+
+        # Intentar obtener descripción traducida (NOTIF_DESC_TELEGRAM, NOTIF_DESC_DESKTOP, etc.)
+        local i18n_key="NOTIF_DESC_${code^^}"
+        [ -n "${!i18n_key}" ] && desc="${!i18n_key}"
+
+        AVAILABLE_NOTIFIERS+=("$code")
+        NOTIFIER_NAMES+=("$name")
+        NOTIFIER_DESCRIPTIONS+=("$desc")
+    done
+}
+
+load_notifier() {
+    local notifier_code="$1"
+    local notifier_file="${NOTIFIER_DIR}/${notifier_code}.notifier"
+
+    # Verificar que el archivo existe
+    [ ! -f "$notifier_file" ] && return 1
+
+    # Cargar archivo de notificador (con validación de seguridad para notifiers)
+    if validate_notifier_file "$notifier_file"; then
+        source "$notifier_file"
+        NOTIFIER_LOADED["$notifier_code"]=1
+
+        # Verificar si tiene las funciones requeridas
+        if type -t notifier_send &>/dev/null; then
+            return 0
+        else
+            log "WARN" "Notifier $notifier_code missing required function notifier_send()"
+            unset NOTIFIER_LOADED["$notifier_code"]
+            return 1
+        fi
+    else
+        log "WARN" "Notifier file $notifier_code failed security validation"
+        return 1
+    fi
+}
+
+load_all_enabled_notifiers() {
+    # Cargar todos los notificadores habilitados
+    for code in "${AVAILABLE_NOTIFIERS[@]}"; do
+        if [ "${NOTIFIER_ENABLED[$code]}" = "1" ]; then
+            load_notifier "$code"
+        fi
+    done
+}
+
+send_notification() {
+    local title="$1"
+    local message="$2"
+    local severity="${3:-info}"
+
+    # No enviar si estamos en dry-run
+    [ "$DRY_RUN" = true ] && return 0
+
+    local any_sent=0
+
+    # Enviar a todos los notificadores habilitados
+    for code in "${AVAILABLE_NOTIFIERS[@]}"; do
+        if [ "${NOTIFIER_ENABLED[$code]}" = "1" ]; then
+            # Cargar el notificador para tener sus funciones disponibles
+            if load_notifier "$code"; then
+                # Verificar que está configurado
+                if type -t notifier_is_configured &>/dev/null && notifier_is_configured; then
+                    if notifier_send "$title" "$message" "$severity" 2>/dev/null; then
+                        log "INFO" "Notification sent via $code"
+                        any_sent=1
+                    else
+                        log "WARN" "Failed to send notification via $code"
+                    fi
+                else
+                    log "DEBUG" "Notifier $code not configured, skipping"
+                fi
+            fi
+        fi
+    done
+
+    return 0
+}
+
+send_critical_notification() {
+    # Enviar notificación crítica inmediata (para errores graves)
+    local title="$1"
+    local message="$2"
+    send_notification "$title" "$message" "critical"
+}
+
+build_summary_notification() {
+    # Construir el mensaje de resumen detallado para la notificación final
+    local hostname
+    hostname=$(hostname 2>/dev/null || echo "unknown")
+
+    local duration=$(($(date +%s) - START_TIME))
+    local mins=$((duration / 60))
+    local secs=$((duration % 60))
+
+    # Calcular espacio liberado
+    local space_after_root space_freed_root
+    space_after_root=$(df / --output=used 2>/dev/null | tail -1 | awk '{print $1}')
+    space_freed_root=$(( (SPACE_BEFORE_ROOT - space_after_root) / 1024 ))
+    [ $space_freed_root -lt 0 ] && space_freed_root=0
+
+    # Estado general
+    local status_emoji status_text
+    if [ "$REBOOT_NEEDED" = true ]; then
+        status_emoji="⚠️"
+        status_text="${MSG_REBOOT_REQUIRED:-Reboot Required}"
+    else
+        status_emoji="✅"
+        status_text="${MSG_COMPLETED:-Completed}"
+    fi
+
+    # Construir lista de pasos
+    local steps_summary=""
+    local step_statuses=(
+        "$STAT_CONNECTIVITY"
+        "$STAT_DEPENDENCIES"
+        "$STAT_SMART"
+        "$STAT_BACKUP_TAR"
+        "$STAT_SNAPSHOT"
+        "$STAT_REPO"
+        "$STAT_UPGRADE"
+        "$STAT_FLATPAK"
+        "$STAT_SNAP"
+        "$STAT_FIRMWARE"
+        "$STAT_CLEAN_APT"
+        "$STAT_CLEAN_KERNEL"
+        "$STAT_CLEAN_DISK"
+        "$STAT_DOCKER"
+        "$STAT_REBOOT"
+    )
+
+    local i=0
+    for step_name in "${MENU_STEP_NAMES[@]}"; do
+        local stat="${step_statuses[$i]}"
+        local icon="⏭️"
+        case "$stat" in
+            "$ICON_OK") icon="✓" ;;
+            "$ICON_FAIL") icon="✗" ;;
+            "$ICON_WARN") icon="⚠️" ;;
+            "$ICON_SKIP"|"[--]") icon="-" ;;
+        esac
+        steps_summary+="$icon ${step_name}
+"
+        ((i++))
+    done
+
+    # Construir mensaje completo
+    cat << EOF
+🖥️ AUTOCLEAN - ${hostname}
+━━━━━━━━━━━━━━━━━━━━━━
+${status_emoji} Status: ${status_text}
+⏱️ Duration: ${mins}m ${secs}s
+💾 Space freed: ${space_freed_root} MB
+
+📋 STEPS:
+${steps_summary}
+📁 Log: ${LOG_FILE:-N/A}
+EOF
+}
+
+show_notification_menu() {
+    # Detectar notificadores disponibles
+    detect_notifiers
+
+    local selected=0
+    local total=${#AVAILABLE_NOTIFIERS[@]}
+
+    # Si no hay notificadores, mostrar mensaje
+    if [ $total -eq 0 ]; then
+        clear
+        print_box_top
+        print_box_center "${BOLD}${MENU_NOTIF_TITLE:-NOTIFICATIONS}${BOX_NC}"
+        print_box_sep
+        print_box_center "${YELLOW}${MENU_NOTIF_NONE:-No notifiers found}${BOX_NC}"
+        print_box_line ""
+        print_box_line "${MENU_NOTIF_INSTALL:-Install notifiers in:}"
+        print_box_line "  ${CYAN}${NOTIFIER_DIR}${BOX_NC}"
+        print_box_sep
+        print_box_center "${DIM}${MENU_PRESS_ANY:-Press any key to continue}${BOX_NC}"
+        print_box_bottom
+        read -rsn1
+        return
+    fi
+
+    # Ocultar cursor
+    tput civis 2>/dev/null
+    trap 'tput cnorm 2>/dev/null' RETURN
+
+    while true; do
+        clear
+        print_box_top
+        print_box_center "${BOLD}${MENU_NOTIF_TITLE:-NOTIFICATIONS}${BOX_NC}"
+        print_box_sep
+        print_box_line "${MENU_NOTIF_HELP:-Toggle notifications, configure, or test}"
+        print_box_sep
+
+        # Mostrar lista de notificadores
+        local i=0
+        for code in "${AVAILABLE_NOTIFIERS[@]}"; do
+            local name="${NOTIFIER_NAMES[$i]}"
+            local enabled="${NOTIFIER_ENABLED[$code]:-0}"
+            local status_icon status_color
+
+            if [ "$enabled" = "1" ]; then
+                status_icon="[x]"
+                status_color="$GREEN"
+            else
+                status_icon="[ ]"
+                status_color="$DIM"
+            fi
+
+            local prefix=" "
+            [ $i -eq $selected ] && prefix=">"
+
+            if [ $i -eq $selected ]; then
+                print_box_line "${BRIGHT_CYAN}${prefix}${status_icon} ${name}${BOX_NC}"
+            else
+                print_box_line " ${status_color}${status_icon}${BOX_NC} ${name}"
+            fi
+            ((i++))
+        done
+
+        print_box_sep
+        local current_code="${AVAILABLE_NOTIFIERS[$selected]}"
+        local current_desc="${NOTIFIER_DESCRIPTIONS[$selected]}"
+        print_box_line "${CYAN}>${BOX_NC} ${current_desc:0:68}"
+        print_box_sep
+        print_box_line "${CYAN}[SPACE]${BOX_NC} ${MENU_NOTIF_TOGGLE:-Toggle} ${CYAN}[C]${BOX_NC} ${MENU_NOTIF_CONFIG:-Config} ${CYAN}[T]${BOX_NC} ${MENU_NOTIF_TEST:-Test} ${CYAN}[H]${BOX_NC} ${MENU_NOTIF_HELP_KEY:-Help} ${CYAN}[S]${BOX_NC} ${MENU_SAVE:-Save} ${CYAN}[ESC]${BOX_NC} ${MENU_BACK:-Back}"
+        print_box_bottom
+
+        # Leer tecla
+        local key=""
+        IFS= read -rsn1 key
+
+        # Detectar secuencias de escape
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 -t 0.1 key
+            case "$key" in
+                '[A') # Arriba
+                    ((selected--))
+                    [ $selected -lt 0 ] && selected=$((total - 1))
+                    ;;
+                '[B') # Abajo
+                    ((selected++))
+                    [ $selected -ge $total ] && selected=0
+                    ;;
+                '') # ESC solo - volver
+                    tput cnorm 2>/dev/null
+                    return
+                    ;;
+            esac
+        elif [[ "$key" == " " ]]; then
+            # Toggle habilitado/deshabilitado
+            local code="${AVAILABLE_NOTIFIERS[$selected]}"
+            if [ "${NOTIFIER_ENABLED[$code]}" = "1" ]; then
+                NOTIFIER_ENABLED["$code"]=0
+            else
+                NOTIFIER_ENABLED["$code"]=1
+            fi
+        elif [[ "$key" == "c" || "$key" == "C" ]]; then
+            # Configurar notificador
+            show_notifier_config "${AVAILABLE_NOTIFIERS[$selected]}"
+        elif [[ "$key" == "t" || "$key" == "T" ]]; then
+            # Probar notificador
+            test_notifier "${AVAILABLE_NOTIFIERS[$selected]}"
+        elif [[ "$key" == "h" || "$key" == "H" ]]; then
+            # Mostrar ayuda
+            show_notifier_help "${AVAILABLE_NOTIFIERS[$selected]}"
+        elif [[ "$key" == "s" || "$key" == "S" ]]; then
+            # Guardar configuración
+            save_config
+            # Mostrar confirmación breve
+            clear
+            print_box_top
+            print_box_center "${GREEN}${MENU_CONFIG_SAVED:-Configuration saved!}${BOX_NC}"
+            print_box_bottom
+            sleep 1
+        elif [[ "$key" == "q" || "$key" == "Q" ]]; then
+            tput cnorm 2>/dev/null
+            return
+        fi
+    done
+}
+
+show_notifier_config() {
+    local code="$1"
+    local notifier_file="${NOTIFIER_DIR}/${code}.notifier"
+
+    # Cargar el notificador para obtener NOTIFIER_FIELDS
+    [ ! -f "$notifier_file" ] && return
+    source "$notifier_file" 2>/dev/null
+
+    # Verificar si tiene campos de configuración
+    if [ ${#NOTIFIER_FIELDS[@]} -eq 0 ]; then
+        clear
+        print_box_top
+        print_box_center "${BOLD}${MENU_CONFIG:-CONFIGURE}: ${NOTIFIER_NAME}${BOX_NC}"
+        print_box_sep
+        print_box_center "${GREEN}${MENU_NO_CONFIG:-No configuration needed}${BOX_NC}"
+        print_box_sep
+        print_box_center "${DIM}${MENU_PRESS_ANY:-Press any key to continue}${BOX_NC}"
+        print_box_bottom
+        read -rsn1
+        return
+    fi
+
+    # Convertir NOTIFIER_FIELDS a arrays indexados para acceso por número
+    local -a field_vars=()
+    local -a field_labels=()
+    for var_name in "${!NOTIFIER_FIELDS[@]}"; do
+        field_vars+=("$var_name")
+        field_labels+=("${NOTIFIER_FIELDS[$var_name]}")
+    done
+    local num_fields=${#field_vars[@]}
+
+    tput cnorm 2>/dev/null
+
+    while true; do
+        clear
+        print_box_top
+        print_box_center "${BOLD}${MENU_CONFIG:-CONFIGURE}: ${NOTIFIER_NAME}${BOX_NC}"
+        print_box_sep
+        print_box_line ""
+
+        # Mostrar todos los campos con números
+        local i
+        for ((i=0; i<num_fields; i++)); do
+            local var_name="${field_vars[$i]}"
+            local label="${field_labels[$i]}"
+            local current_value="${!var_name}"
+
+            # Extraer nombre corto del label (primera parte antes de los paréntesis)
+            local short_label
+            short_label=$(echo "$label" | sed 's/(.*//' | sed 's/[[:space:]]*$//')
+
+            # Mostrar valor actual (ocultar tokens parcialmente)
+            local display_value="${current_value:-(${DIM}not set${BOX_NC})}"
+            if [[ "$var_name" == *"TOKEN"* || "$var_name" == *"PASSWORD"* || "$var_name" == *"KEY"* ]]; then
+                if [ -n "$current_value" ]; then
+                    display_value="${current_value:0:10}..."
+                fi
+            fi
+
+            # Determinar color según si está configurado
+            local status_color="${RED}"
+            [ -n "$current_value" ] && status_color="${GREEN}"
+
+            print_box_line "  ${CYAN}[$((i+1))]${BOX_NC} ${BOLD}${short_label}${BOX_NC}"
+            print_box_line "      ${DIM}${label}${BOX_NC}"
+            print_box_line "      ${status_color}▶${BOX_NC} ${display_value}"
+            print_box_line ""
+        done
+
+        print_box_sep
+        print_box_line "  ${CYAN}[1-${num_fields}]${BOX_NC} ${MENU_EDIT_FIELD:-Edit field}    ${CYAN}[S]${BOX_NC} ${MENU_SAVE:-Save}    ${CYAN}[Q]${BOX_NC} ${MENU_BACK:-Back}"
+        print_box_bottom
+
+        # Leer tecla
+        read -rsn1 key
+
+        # Verificar si es un número válido
+        if [[ "$key" =~ ^[1-9]$ ]]; then
+            local field_idx=$((key - 1))
+            if [ $field_idx -lt $num_fields ]; then
+                local var_name="${field_vars[$field_idx]}"
+                local label="${field_labels[$field_idx]}"
+
+                echo ""
+                print_box_top
+                print_box_center "${BOLD}${label}${BOX_NC}"
+                print_box_bottom
+                echo ""
+                printf "  ${MENU_ENTER_VALUE:-Enter value}: "
+                local new_value
+                read -r new_value
+
+                if [ -n "$new_value" ]; then
+                    export "$var_name"="$new_value"
+                fi
+            fi
+        elif [[ "$key" == "s" || "$key" == "S" ]]; then
+            # Guardar configuración
+            save_config
+            clear
+            print_box_top
+            print_box_center "${GREEN}${MENU_CONFIG_SAVED:-Configuration saved!}${BOX_NC}"
+            print_box_bottom
+            sleep 1
+        elif [[ "$key" == "q" || "$key" == "Q" ]]; then
+            break
+        fi
+    done
+
+    tput civis 2>/dev/null
+}
+
+show_notifier_help() {
+    local code="$1"
+    local notifier_file="${NOTIFIER_DIR}/${code}.notifier"
+
+    # Cargar el notificador
+    [ ! -f "$notifier_file" ] && return
+    source "$notifier_file" 2>/dev/null
+
+    clear
+
+    # Verificar si tiene función de ayuda
+    if type -t notifier_help &>/dev/null; then
+        notifier_help
+    else
+        print_box_top
+        print_box_center "${BOLD}${MENU_HELP:-HELP}: ${NOTIFIER_NAME}${BOX_NC}"
+        print_box_sep
+        print_box_center "${DIM}${MENU_NO_HELP:-No help available for this notifier}${BOX_NC}"
+        print_box_bottom
+    fi
+
+    echo ""
+    printf "${DIM}${MENU_PRESS_ANY:-Press any key to continue}${NC}"
+    read -rsn1
+}
+
+test_notifier() {
+    local code="$1"
+
+    clear
+    print_box_top
+    print_box_center "${BOLD}${MENU_TEST:-TEST}: ${code}${BOX_NC}"
+    print_box_sep
+
+    # Cargar el notificador
+    if ! load_notifier "$code"; then
+        print_box_center "${RED}${MENU_LOAD_FAILED:-Failed to load notifier}${BOX_NC}"
+        print_box_bottom
+        read -rsn1
+        return
+    fi
+
+    # Verificar dependencias
+    print_box_line "${MENU_CHECKING_DEPS:-Checking dependencies...}"
+    if type -t notifier_check_deps &>/dev/null && ! notifier_check_deps; then
+        print_box_line "${RED}${MENU_DEPS_MISSING:-Dependencies missing}${BOX_NC}"
+        print_box_line "${MENU_DEPS_INSTALL:-Please install:} ${NOTIFIER_DEPS:-N/A}"
+        print_box_bottom
+        read -rsn1
+        return
+    fi
+    print_box_line "  ${GREEN}${ICON_OK}${BOX_NC} ${MENU_DEPS_OK:-Dependencies OK}"
+
+    # Verificar configuración
+    print_box_line "${MENU_CHECKING_CONFIG:-Checking configuration...}"
+    if type -t notifier_is_configured &>/dev/null && ! notifier_is_configured; then
+        print_box_line "${YELLOW}${MENU_NOT_CONFIGURED:-Not configured}${BOX_NC}"
+        print_box_line "${MENU_CONFIG_FIRST:-Please configure this notifier first}"
+        print_box_bottom
+        read -rsn1
+        return
+    fi
+    print_box_line "  ${GREEN}${ICON_OK}${BOX_NC} ${MENU_CONFIG_OK:-Configuration OK}"
+
+    # Enviar notificación de prueba
+    print_box_line "${MENU_SENDING_TEST:-Sending test notification...}"
+    if type -t notifier_test &>/dev/null && notifier_test; then
+        print_box_line "  ${GREEN}${ICON_OK}${BOX_NC} ${MENU_TEST_SUCCESS:-Test notification sent!}"
+    else
+        print_box_line "  ${RED}${ICON_FAIL}${BOX_NC} ${MENU_TEST_FAILED:-Failed to send test notification}"
+    fi
+
+    print_box_sep
+    print_box_center "${DIM}${MENU_PRESS_ANY:-Press any key to continue}${BOX_NC}"
+    print_box_bottom
+    read -rsn1
+}
+
+# ============================================================================
 # COLORES E ICONOS (valores por defecto, serán sobrescritos por el tema)
 # ============================================================================
 
@@ -1691,7 +2276,7 @@ show_interactive_menu() {
         print_box_sep
         print_box_line "${MENU_SELECTED}: ${GREEN}${active_count}${BOX_NC}/${total_items}    ${MENU_PROFILE}: $(config_exists && echo "${GREEN}${MENU_PROFILE_SAVED}${BOX_NC}" || echo "${DIM}${MENU_PROFILE_UNSAVED}${BOX_NC}")"
         print_box_sep
-        print_box_center "${CYAN}[ENTER]${BOX_NC} ${MENU_CTRL_ENTER} ${CYAN}[A]${BOX_NC} ${MENU_CTRL_ALL} ${CYAN}[N]${BOX_NC} ${MENU_CTRL_NONE} ${CYAN}[G]${BOX_NC} ${MENU_CTRL_SAVE} ${CYAN}[L]${BOX_NC} ${MENU_CTRL_LANG} ${CYAN}[T]${BOX_NC} ${MENU_CTRL_THEME:-Theme} ${CYAN}[Q]${BOX_NC} ${MENU_CTRL_QUIT}"
+        print_box_center "${CYAN}[ENTER]${BOX_NC} ${MENU_CTRL_ENTER} ${CYAN}[A]${BOX_NC} ${MENU_CTRL_ALL} ${CYAN}[G]${BOX_NC} ${MENU_CTRL_SAVE} ${CYAN}[L]${BOX_NC} ${MENU_CTRL_LANG} ${CYAN}[T]${BOX_NC} ${MENU_CTRL_THEME:-Theme} ${CYAN}[O]${BOX_NC} ${MENU_CTRL_NOTIF:-Notif} ${CYAN}[Q]${BOX_NC} ${MENU_CTRL_QUIT}"
         print_box_bottom
 
         # Leer tecla
@@ -1753,6 +2338,7 @@ show_interactive_menu() {
                 'd'|'D') config_exists && delete_config ;;
                 'l'|'L') show_language_selector ;;
                 't'|'T') show_theme_selector ;;
+                'o'|'O') show_notification_menu ;;
                 'q'|'Q') tput cnorm 2>/dev/null; die "${MSG_CANCELLED_BY_USER}" ;;
             esac
         fi
@@ -1812,6 +2398,7 @@ step_check_connectivity() {
             log "WARN" "${MSG_CONNECTION_WARN}"
         else
             STAT_CONNECTIVITY="$ICON_FAIL"
+            send_critical_notification "No Internet Connection" "Autoclean aborted: No internet connection available on $(hostname)"
             die "${MSG_NO_CONNECTION}"
         fi
     fi
@@ -2051,6 +2638,7 @@ step_snapshot_timeshift() {
         echo -e "${RED}→ ${MSG_SNAPSHOT_FAILED}${NC}"
         STAT_SNAPSHOT="${RED}$ICON_FAIL${NC}"
         log "ERROR" "${MSG_SNAPSHOT_FAILED}"
+        send_critical_notification "Timeshift Snapshot Failed" "WARNING: Could not create system snapshot on $(hostname). Proceeding without backup protection."
 
         if [ "$UNATTENDED" = false ]; then
             echo -e "${YELLOW}${PROMPT_CONTINUE_NO_SNAPSHOT}${NC}"
@@ -2116,6 +2704,7 @@ step_upgrade_system() {
             echo "$simulation" | grep "^Remv" | head -n 5 | sed "s/^Remv/ - ${MSG_REMOVING}/"
 
             if [ "$UNATTENDED" = true ]; then
+                send_critical_notification "Upgrade Aborted" "SECURITY: Upgrade on $(hostname) would remove ${remove_count} packages. Operation aborted for safety."
                 die "${MSG_ABORTED_MASS_REMOVAL}"
             fi
 
@@ -2547,6 +3136,7 @@ step_check_smart() {
     if $has_error; then
         STAT_SMART="$ICON_FAIL"
         log "ERROR" "${MSG_SMART_ERRORS_FOUND}"
+        send_critical_notification "DISK FAILURE DETECTED" "CRITICAL: One or more disks on $(hostname) are reporting SMART errors. Backup your data IMMEDIATELY and consider replacing the failing disk(s)."
     elif $has_warning; then
         STAT_SMART="$ICON_WARN"
         log "WARN" "${MSG_SMART_WARNINGS_FOUND}"
@@ -2763,14 +3353,14 @@ show_final_summary() {
         overall_icon="${ICON_SUM_WARN}"
     fi
 
-    # Enviar notificación desktop si está disponible
-    if [ -n "$DISPLAY" ] && command -v notify-send &>/dev/null; then
-        if [ "$REBOOT_NEEDED" = true ]; then
-            notify-send "Mantenimiento Debian" "Completado. Se requiere reinicio." -u critical -i system-software-update 2>/dev/null
-        else
-            notify-send "Mantenimiento Debian" "Completado exitosamente." -u normal -i emblem-default 2>/dev/null
-        fi
-    fi
+    # Enviar notificación via sistema de plugins
+    local notification_severity="success"
+    [ $error_count -gt 0 ] && notification_severity="error"
+    [ "$REBOOT_NEEDED" = true ] && notification_severity="warning"
+
+    local notification_message
+    notification_message=$(build_summary_notification)
+    send_notification "Autoclean ${overall_status}" "$notification_message" "$notification_severity"
 
     log "INFO" "=========================================="
     log "INFO" "Mantenimiento completado en ${minutes}m ${seconds}s"
@@ -3052,6 +3642,9 @@ done
 # EJECUCIÓN MAESTRA
 # ============================================================================
 
+# Detectar notificadores disponibles (antes de load_config para apply_notifier_config)
+detect_notifiers
+
 # Cargar configuración guardada si existe (para obtener SAVED_LANG antes de cargar idioma)
 # Si no existe, generar archivo con valores predeterminados
 if config_exists; then
@@ -3066,6 +3659,9 @@ load_language
 
 # Cargar tema (usa SAVED_THEME si existe, o usa default)
 load_theme
+
+# Cargar notificadores habilitados
+load_all_enabled_notifiers
 
 # Manejar operaciones de schedule (antes de ejecución principal)
 if [ "$SCHEDULE_STATUS" = true ]; then

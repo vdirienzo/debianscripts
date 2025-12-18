@@ -385,11 +385,44 @@ EOF
     return $result
 }
 
+# Validar archivo antes de hacer source (seguridad)
+# Rechaza archivos con sintaxis peligrosa que podría ejecutar código
+validate_source_file() {
+    local file="$1"
+    local file_type="${2:-file}"
+
+    # Verificar que el archivo existe y es legible
+    [[ ! -f "$file" || ! -r "$file" ]] && return 1
+
+    # Patrones peligrosos a rechazar (podrían ejecutar código arbitrario)
+    # Se buscan en contenido no comentado
+    local content
+    content=$(grep -v '^\s*#' "$file" 2>/dev/null)
+
+    # Buscar patrones peligrosos:
+    # - $( o ` = command substitution
+    # - ; seguido de comando = ejecución secuencial
+    # - | = pipe a otro comando
+    # - && o || = operadores lógicos
+    # Nota: < y > dentro de strings son seguros (ej: "valor < otro")
+    if echo "$content" | grep -qE '\$\(|`|;\s*[a-zA-Z]|\s\|\s|\s&&\s|\s\|\|\s' 2>/dev/null; then
+        log "WARN" "Archivo $file_type rechazado: contiene sintaxis no permitida"
+        return 1
+    fi
+
+    return 0
+}
+
 load_config() {
     # Cargar configuración si existe el archivo
     if [ -f "$CONFIG_FILE" ]; then
-        source "$CONFIG_FILE"
-        return 0
+        if validate_source_file "$CONFIG_FILE" "config"; then
+            source "$CONFIG_FILE"
+            return 0
+        else
+            log "WARN" "Archivo de configuración no pasó validación de seguridad"
+            return 1
+        fi
     fi
     return 1
 }
@@ -601,13 +634,18 @@ load_language() {
         lang_to_load="$DEFAULT_LANG"
     fi
 
-    # Cargar archivo de idioma
+    # Cargar archivo de idioma (con validación de seguridad)
     if [ -f "$lang_file" ]; then
-        source "$lang_file"
-        CURRENT_LANG="$lang_to_load"
-        # Actualizar arrays con textos del idioma cargado
-        update_language_arrays
-        return 0
+        if validate_source_file "$lang_file" "lang"; then
+            source "$lang_file"
+            CURRENT_LANG="$lang_to_load"
+            # Actualizar arrays con textos del idioma cargado
+            update_language_arrays
+            return 0
+        else
+            echo "ERROR: Language file failed security validation"
+            exit 1
+        fi
     else
         # Fallback crítico: usar inglés hardcodeado mínimo
         echo "ERROR: No language files found in $LANG_DIR"
@@ -701,19 +739,23 @@ load_theme() {
         theme_to_load="$DEFAULT_THEME"
     fi
 
-    # Cargar archivo de tema
+    # Cargar archivo de tema (con validación de seguridad)
     if [ -f "$theme_file" ]; then
-        # Limpiar variables de tema anterior (especialmente las opcionales)
-        unset T_BOX_BG T_BOX_NC
-        unset T_RED T_GREEN T_YELLOW T_BLUE T_CYAN T_MAGENTA
-        unset T_BRIGHT_GREEN T_BRIGHT_YELLOW T_BRIGHT_CYAN T_DIM
-        unset T_BOX_BORDER T_BOX_TITLE T_TEXT_NORMAL T_TEXT_SELECTED
-        unset T_TEXT_ACTIVE T_TEXT_INACTIVE T_STATUS_OK T_STATUS_ERROR
-        unset T_STATUS_WARN T_STATUS_INFO T_STEP_HEADER
+        if validate_source_file "$theme_file" "theme"; then
+            # Limpiar variables de tema anterior (especialmente las opcionales)
+            unset T_BOX_BG T_BOX_NC
+            unset T_RED T_GREEN T_YELLOW T_BLUE T_CYAN T_MAGENTA
+            unset T_BRIGHT_GREEN T_BRIGHT_YELLOW T_BRIGHT_CYAN T_DIM
+            unset T_BOX_BORDER T_BOX_TITLE T_TEXT_NORMAL T_TEXT_SELECTED
+            unset T_TEXT_ACTIVE T_TEXT_INACTIVE T_STATUS_OK T_STATUS_ERROR
+            unset T_STATUS_WARN T_STATUS_INFO T_STEP_HEADER
 
-        source "$theme_file"
-        CURRENT_THEME="$theme_to_load"
-        apply_theme
+            source "$theme_file"
+            CURRENT_THEME="$theme_to_load"
+            apply_theme
+        else
+            log "WARN" "Theme file failed security validation, using defaults"
+        fi
     fi
 }
 
@@ -1081,7 +1123,9 @@ init_log() {
     chmod 600 "$LOG_FILE"
 
     # Limpiar logs antiguos (mantener últimas 5 ejecuciones)
-    ls -t "$LOG_DIR"/sys-update-*.log 2>/dev/null | tail -n +6 | xargs -r rm -f
+    # Usa find para manejo seguro de nombres de archivo
+    find "$LOG_DIR" -maxdepth 1 -name "sys-update-*.log" -type f -printf '%T@ %p\n' 2>/dev/null | \
+        sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r -d'\n' rm -f
 }
 
 log() {
@@ -1485,13 +1529,14 @@ show_interactive_menu() {
             esac
         elif [[ "$key" == " " ]]; then
             local var_name="${MENU_STEP_VARS[$current_index]}"
-            [ "${!var_name}" = "1" ] && eval "$var_name=0" || eval "$var_name=1"
+            declare -n ref="$var_name"
+            [ "$ref" = "1" ] && ref=0 || ref=1
         elif [[ "$key" == "" ]]; then
             menu_running=false
         else
             case "$key" in
-                'a'|'A') for var_name in "${MENU_STEP_VARS[@]}"; do eval "$var_name=1"; done ;;
-                'n'|'N') for var_name in "${MENU_STEP_VARS[@]}"; do eval "$var_name=0"; done ;;
+                'a'|'A') for var_name in "${MENU_STEP_VARS[@]}"; do declare -n ref="$var_name"; ref=1; done ;;
+                'n'|'N') for var_name in "${MENU_STEP_VARS[@]}"; do declare -n ref="$var_name"; ref=0; done ;;
                 'g'|'G') save_config ;;
                 'd'|'D') config_exists && delete_config ;;
                 'l'|'L') show_language_selector ;;
@@ -1689,8 +1734,11 @@ step_backup_tar() {
         log "SUCCESS" "${MSG_BACKUP_CREATED}"
 
         # Limpiar backups antiguos (mantener últimas 5 ejecuciones)
-        ls -t "$BACKUP_DIR"/backup_*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm -f
-        ls -t "$BACKUP_DIR"/packages_*.list 2>/dev/null | tail -n +6 | xargs -r rm -f
+        # Usa find para manejo seguro de nombres de archivo
+        find "$BACKUP_DIR" -maxdepth 1 -name "backup_*.tar.gz" -type f -printf '%T@ %p\n' 2>/dev/null | \
+            sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r -d'\n' rm -f
+        find "$BACKUP_DIR" -maxdepth 1 -name "packages_*.list" -type f -printf '%T@ %p\n' 2>/dev/null | \
+            sort -rn | tail -n +6 | cut -d' ' -f2- | xargs -r -d'\n' rm -f
     else
         STAT_BACKUP_TAR="$ICON_FAIL"
         log "ERROR" "${MSG_BACKUP_FAILED}"

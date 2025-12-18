@@ -105,6 +105,9 @@ La deteccion se realiza automaticamente usando `/etc/os-release` y el script ada
 - **Validacion de espacio en disco**: Verifica espacio libre antes de actualizar
 - **Lock file**: Evita ejecuciones simultaneas
 - **Reparacion automatica**: Ejecuta `dpkg --configure -a` antes de actualizar
+- **Validacion de archivos de configuracion**: Los archivos `.conf`, `.lang` y `.theme` se validan antes de cargar para prevenir inyeccion de codigo
+- **Manejo seguro de archivos**: Usa `find` con delimitadores seguros para limpieza de logs y backups
+- **Variables seguras**: Usa `declare -n` (nameref) en lugar de `eval` para manipulacion de variables en el menu
 
 ### Control y Modularidad
 

@@ -191,6 +191,9 @@ SCHEDULE_MODE=""             # Modo: daily, weekly, monthly
 UNSCHEDULE=false             # Flag para eliminar timer
 SCHEDULE_STATUS=false        # Flag para mostrar estado del timer
 
+# Variables para Perfiles Predefinidos
+PROFILE=""                   # Perfil: server, desktop, developer, minimal
+
 # ============================================================================
 # VARIABLES DE DISTRIBUCIÓN
 # ============================================================================
@@ -385,6 +388,98 @@ config_exists() {
 
 delete_config() {
     rm -f "$CONFIG_FILE" 2>/dev/null
+}
+
+# ============================================================================
+# PERFILES PREDEFINIDOS
+# ============================================================================
+
+apply_profile() {
+    local profile="$1"
+
+    case "$profile" in
+        server)
+            # Servidor: Sin UI, Docker habilitado, SMART activo, sin Flatpak/Snap
+            STEP_CHECK_CONNECTIVITY=1
+            STEP_CHECK_DEPENDENCIES=1
+            STEP_CHECK_SMART=1
+            STEP_BACKUP_TAR=1
+            STEP_SNAPSHOT_TIMESHIFT=0    # Servidores no usan Timeshift
+            STEP_UPDATE_REPOS=1
+            STEP_UPGRADE_SYSTEM=1
+            STEP_UPDATE_FLATPAK=0        # Servidores no usan Flatpak
+            STEP_UPDATE_SNAP=0           # Servidores no usan Snap
+            STEP_CHECK_FIRMWARE=1
+            STEP_CLEANUP_APT=1
+            STEP_CLEANUP_KERNELS=1
+            STEP_CLEANUP_DISK=1
+            STEP_CLEANUP_DOCKER=1        # Docker habilitado
+            STEP_CHECK_REBOOT=1
+            NO_MENU=true                 # Sin UI interactiva
+            ;;
+        desktop)
+            # Desktop: UI activa, sin Docker, SMART activo, Flatpak habilitado
+            STEP_CHECK_CONNECTIVITY=1
+            STEP_CHECK_DEPENDENCIES=1
+            STEP_CHECK_SMART=1
+            STEP_BACKUP_TAR=1
+            STEP_SNAPSHOT_TIMESHIFT=1    # Timeshift recomendado
+            STEP_UPDATE_REPOS=1
+            STEP_UPGRADE_SYSTEM=1
+            STEP_UPDATE_FLATPAK=1        # Flatpak habilitado
+            STEP_UPDATE_SNAP=0
+            STEP_CHECK_FIRMWARE=1
+            STEP_CLEANUP_APT=1
+            STEP_CLEANUP_KERNELS=1
+            STEP_CLEANUP_DISK=1
+            STEP_CLEANUP_DOCKER=0        # Sin Docker
+            STEP_CHECK_REBOOT=1
+            ;;
+        developer)
+            # Desarrollador: UI activa, Docker habilitado, sin SMART, todo activo
+            STEP_CHECK_CONNECTIVITY=1
+            STEP_CHECK_DEPENDENCIES=1
+            STEP_CHECK_SMART=0           # Sin SMART (puede ser lento)
+            STEP_BACKUP_TAR=1
+            STEP_SNAPSHOT_TIMESHIFT=1
+            STEP_UPDATE_REPOS=1
+            STEP_UPGRADE_SYSTEM=1
+            STEP_UPDATE_FLATPAK=1
+            STEP_UPDATE_SNAP=1           # Snap habilitado
+            STEP_CHECK_FIRMWARE=0        # Sin firmware (evita interrupciones)
+            STEP_CLEANUP_APT=1
+            STEP_CLEANUP_KERNELS=1
+            STEP_CLEANUP_DISK=1
+            STEP_CLEANUP_DOCKER=1        # Docker habilitado
+            STEP_CHECK_REBOOT=1
+            ;;
+        minimal)
+            # Minimo: Solo actualizaciones esenciales, sin limpieza agresiva
+            STEP_CHECK_CONNECTIVITY=1
+            STEP_CHECK_DEPENDENCIES=0
+            STEP_CHECK_SMART=0
+            STEP_BACKUP_TAR=0
+            STEP_SNAPSHOT_TIMESHIFT=0
+            STEP_UPDATE_REPOS=1
+            STEP_UPGRADE_SYSTEM=1
+            STEP_UPDATE_FLATPAK=0
+            STEP_UPDATE_SNAP=0
+            STEP_CHECK_FIRMWARE=0
+            STEP_CLEANUP_APT=1
+            STEP_CLEANUP_KERNELS=0
+            STEP_CLEANUP_DISK=0
+            STEP_CLEANUP_DOCKER=0
+            STEP_CHECK_REBOOT=1
+            NO_MENU=true                 # Sin UI interactiva
+            ;;
+        *)
+            echo "Error: ${MSG_PROFILE_UNKNOWN:-Unknown profile}: $profile"
+            echo "${MSG_PROFILE_AVAILABLE:-Available profiles}: server, desktop, developer, minimal"
+            exit 1
+            ;;
+    esac
+
+    log "INFO" "$(printf "${MSG_PROFILE_APPLIED:-Profile applied}: %s" "$profile")"
 }
 
 # ============================================================================
@@ -2536,6 +2631,15 @@ while [[ $# -gt 0 ]]; do
             SCHEDULE_STATUS=true
             shift
             ;;
+        --profile)
+            if [ -n "$2" ] && [[ "$2" =~ ^(server|desktop|developer|minimal)$ ]]; then
+                PROFILE="$2"
+                shift 2
+            else
+                echo "Error: --profile requires: server, desktop, developer, or minimal"
+                exit 1
+            fi
+            ;;
         --help)
             cat << 'EOF'
 Mantenimiento Integral para Distribuciones basadas en Debian/Ubuntu
@@ -2556,21 +2660,29 @@ Opciones:
   --no-menu              Omitir menú interactivo (usar config por defecto)
   --quiet                Modo silencioso (solo logs)
   --lang LANG            Establecer idioma (en, es, pt, fr, de, it)
+  --profile PERFIL       Usar perfil predefinido (ver abajo)
   --schedule MODE        Crear timer systemd (daily, weekly, monthly)
   --unschedule           Eliminar timer systemd programado
   --schedule-status      Mostrar estado del timer programado
   --help                 Mostrar esta ayuda
 
+Perfiles predefinidos (--profile):
+  server      Sin UI, Docker ON, SMART ON, sin Flatpak/Snap
+  desktop     Con UI, Docker OFF, SMART ON, Flatpak ON, Timeshift ON
+  developer   Con UI, Docker ON, Snap ON, sin SMART/Firmware
+  minimal     Sin UI, solo apt update/upgrade y limpieza APT
+
 Ejemplos:
-  sudo ./autoclean.sh                    # Ejecución normal
+  sudo ./autoclean.sh                    # Ejecución normal (interactivo)
+  sudo ./autoclean.sh --profile server   # Perfil servidor
+  sudo ./autoclean.sh --profile desktop  # Perfil escritorio
   sudo ./autoclean.sh --dry-run          # Simular cambios
   sudo ./autoclean.sh -y                 # Modo desatendido
   sudo ./autoclean.sh --schedule weekly  # Programar semanal
-  sudo ./autoclean.sh --schedule-status  # Ver estado del timer
 
 Configuración:
   Edita las variables STEP_* al inicio del script para
-  activar/desactivar pasos individuales.
+  activar/desactivar pasos individuales, o usa --profile.
 
 Más información en los comentarios del script.
 EOF
@@ -2598,6 +2710,11 @@ load_language
 
 # Cargar tema (usa SAVED_THEME si existe, o usa default)
 load_theme
+
+# Aplicar perfil si se especificó via CLI (--profile)
+if [ -n "$PROFILE" ]; then
+    apply_profile "$PROFILE"
+fi
 
 # Manejar operaciones de schedule (antes de ejecución principal)
 if [ "$SCHEDULE_STATUS" = true ]; then

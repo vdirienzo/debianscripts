@@ -11,6 +11,7 @@ Coleccion de scripts de mantenimiento y actualizacion para distribuciones basada
   - [Requisitos del Sistema](#requisitos-del-sistema)
   - [Instalacion y Uso](#instalacion-y-uso)
   - [Configuracion Avanzada](#configuracion-avanzada)
+  - [Perfiles Predefinidos](#perfiles-predefinidos)
   - [Screenshots](#screenshots)
   - [Menu Interactivo](#menu-interactivo)
   - [Ejemplos de Uso](#ejemplos-de-uso)
@@ -217,6 +218,67 @@ STEP_UPDATE_SNAP=0
 
 ---
 
+## Perfiles Predefinidos
+
+El script incluye 4 perfiles predefinidos que configuran automaticamente los pasos segun el tipo de sistema:
+
+```bash
+sudo ./autoclean.sh --profile PERFIL
+```
+
+| Perfil | Descripcion | Pasos Activos |
+|--------|-------------|---------------|
+| `server` | Servidores sin interfaz grafica | Docker ON, SMART ON, sin Flatpak/Snap/Timeshift, **sin menu** |
+| `desktop` | Estaciones de trabajo | Flatpak ON, Timeshift ON, SMART ON, sin Docker |
+| `developer` | Entornos de desarrollo | Docker ON, Snap ON, Flatpak ON, sin SMART/Firmware |
+| `minimal` | Actualizacion minima | Solo apt update/upgrade y limpieza APT, **sin menu** |
+
+### Uso de Perfiles
+
+```bash
+# Mantenimiento de servidor (automatico, sin interaccion)
+sudo ./autoclean.sh --profile server
+
+# Mantenimiento de escritorio (con menu interactivo)
+sudo ./autoclean.sh --profile desktop
+
+# Mantenimiento rapido para desarrollador
+sudo ./autoclean.sh --profile developer
+
+# Actualizacion minima sin limpieza agresiva
+sudo ./autoclean.sh --profile minimal
+```
+
+### Detalle de Cada Perfil
+
+**server** - Optimizado para servidores:
+- Sin interfaz grafica (NO_MENU=true)
+- Docker/Podman habilitado
+- SMART habilitado (salud de discos)
+- Sin Flatpak/Snap (no hay apps de escritorio)
+- Sin Timeshift (servidores usan otros metodos de backup)
+
+**desktop** - Optimizado para escritorio:
+- Menu interactivo habilitado
+- Flatpak habilitado (apps de escritorio)
+- Timeshift habilitado (snapshots recomendados)
+- SMART habilitado
+- Sin Docker (no es comun en escritorios)
+
+**developer** - Optimizado para desarrollo:
+- Menu interactivo habilitado
+- Docker habilitado (contenedores de desarrollo)
+- Snap habilitado (herramientas de desarrollo)
+- Flatpak habilitado
+- Sin SMART/Firmware (evita interrupciones)
+
+**minimal** - Actualizacion esencial:
+- Sin interfaz grafica (NO_MENU=true)
+- Solo: conectividad, repos, upgrade, limpieza APT, reinicio
+- Sin backups, sin snapshots, sin Docker, sin SMART
+
+---
+
 ## Screenshots
 
 ### Resumen de Ejecucion
@@ -371,6 +433,7 @@ Opciones:
   --no-menu            Omitir menu interactivo (usar config guardada o por defecto)
   --quiet              Modo silencioso (solo logs)
   --lang CODIGO        Forzar idioma (en, es, pt, fr, de, it)
+  --profile PERFIL     Usar perfil predefinido (server, desktop, developer, minimal)
   --schedule MODO      Crear timer systemd (daily, weekly, monthly)
   --unschedule         Eliminar timer systemd programado
   --schedule-status    Mostrar estado del timer programado
@@ -582,6 +645,7 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 ## Changelog v2025.12
 
 ### Nuevas Funcionalidades
+- **Perfiles Predefinidos** - Nuevo argumento `--profile` con 4 perfiles: server, desktop, developer, minimal
 - **Limpieza Docker/Podman** - Nuevo paso para limpiar imagenes, contenedores y volumenes sin usar
 - **Verificacion SMART** - Diagnostico de salud de discos duros antes de realizar cambios
 - **Programacion Systemd Timer** - Opciones `--schedule`, `--unschedule`, `--schedule-status` para automatizar ejecucion

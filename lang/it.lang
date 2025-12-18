@@ -383,6 +383,15 @@ MSG_SCHEDULE_ACTIVE="La manutenzione programmata e ATTIVA"
 MSG_SCHEDULE_NOT_ACTIVE="La manutenzione programmata NON e configurata"
 MSG_SCHEDULE_NEXT_RUN="Prossima esecuzione programmata"
 
+# === MESSAGES - PROFILES ===
+MSG_PROFILE_APPLIED="Profilo applicato"
+MSG_PROFILE_UNKNOWN="Profilo sconosciuto"
+MSG_PROFILE_AVAILABLE="Profili disponibili: server, desktop, developer, minimal"
+MSG_PROFILE_SERVER_DESC="Server: Senza UI, Docker ON, SMART ON, senza Flatpak/Snap"
+MSG_PROFILE_DESKTOP_DESC="Desktop: UI ON, Flatpak ON, Timeshift ON, senza Docker"
+MSG_PROFILE_DEVELOPER_DESC="Developer: UI ON, Docker ON, Snap ON, senza SMART/Firmware"
+MSG_PROFILE_MINIMAL_DESC="Minimal: Senza UI, solo apt update/upgrade e pulizia"
+
 # === ICONS (ASCII) ===
 ICON_OK="[OK]"
 ICON_FAIL="[XX]"

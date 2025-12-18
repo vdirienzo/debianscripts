@@ -182,7 +182,14 @@ STEP_CHECK_FIRMWARE=1        # Verificar actualizaciones de firmware
 STEP_CLEANUP_APT=1           # Limpieza de paquetes huérfanos
 STEP_CLEANUP_KERNELS=1       # Eliminar kernels antiguos
 STEP_CLEANUP_DISK=1          # Limpiar logs y caché
+STEP_CLEANUP_DOCKER=0        # Limpiar Docker/Podman (deshabilitado por defecto)
+STEP_CHECK_SMART=1           # Verificar salud de discos (SMART)
 STEP_CHECK_REBOOT=1          # Verificar necesidad de reinicio
+
+# Variables para programación Systemd Timer
+SCHEDULE_MODE=""             # Modo: daily, weekly, monthly
+UNSCHEDULE=false             # Flag para eliminar timer
+SCHEDULE_STATUS=false        # Flag para mostrar estado del timer
 
 # ============================================================================
 # VARIABLES DE DISTRIBUCIÓN
@@ -216,6 +223,8 @@ STAT_FIRMWARE="[..]"
 STAT_CLEAN_APT="[..]"
 STAT_CLEAN_KERNEL="[..]"
 STAT_CLEAN_DISK="[..]"
+STAT_DOCKER="[..]"
+STAT_SMART="[..]"
 STAT_REBOOT="[..]"
 
 # Contadores y tiempo
@@ -243,19 +252,21 @@ declare -a MENU_STEP_DESCRIPTIONS
 declare -a STEP_SHORT_NAMES
 
 MENU_STEP_VARS=(
-    "STEP_CHECK_CONNECTIVITY"
-    "STEP_CHECK_DEPENDENCIES"
-    "STEP_BACKUP_TAR"
-    "STEP_SNAPSHOT_TIMESHIFT"
-    "STEP_UPDATE_REPOS"
-    "STEP_UPGRADE_SYSTEM"
-    "STEP_UPDATE_FLATPAK"
-    "STEP_UPDATE_SNAP"
-    "STEP_CHECK_FIRMWARE"
-    "STEP_CLEANUP_APT"
-    "STEP_CLEANUP_KERNELS"
-    "STEP_CLEANUP_DISK"
-    "STEP_CHECK_REBOOT"
+    "STEP_CHECK_CONNECTIVITY"    # 1 - Verificar conectividad
+    "STEP_CHECK_DEPENDENCIES"    # 2 - Verificar dependencias
+    "STEP_CHECK_SMART"           # 3 - SMART (verificar disco antes de cambios)
+    "STEP_BACKUP_TAR"            # 4 - Backup TAR
+    "STEP_SNAPSHOT_TIMESHIFT"    # 5 - Snapshot Timeshift
+    "STEP_UPDATE_REPOS"          # 6 - Actualizar repos
+    "STEP_UPGRADE_SYSTEM"        # 7 - Actualizar sistema
+    "STEP_UPDATE_FLATPAK"        # 8 - Flatpak
+    "STEP_UPDATE_SNAP"           # 9 - Snap
+    "STEP_CHECK_FIRMWARE"        # 10 - Firmware
+    "STEP_CLEANUP_APT"           # 11 - Limpieza APT
+    "STEP_CLEANUP_KERNELS"       # 12 - Limpieza Kernels
+    "STEP_CLEANUP_DISK"          # 13 - Limpieza Disco
+    "STEP_CLEANUP_DOCKER"        # 14 - Limpieza Docker
+    "STEP_CHECK_REBOOT"          # 15 - Verificar reinicio
 )
 
 # Función para actualizar arrays desde variables de idioma
@@ -274,6 +285,8 @@ update_language_arrays() {
         "$STEP_NAME_11"
         "$STEP_NAME_12"
         "$STEP_NAME_13"
+        "$STEP_NAME_14"
+        "$STEP_NAME_15"
     )
 
     MENU_STEP_DESCRIPTIONS=(
@@ -290,6 +303,8 @@ update_language_arrays() {
         "$STEP_DESC_11"
         "$STEP_DESC_12"
         "$STEP_DESC_13"
+        "$STEP_DESC_14"
+        "$STEP_DESC_15"
     )
 
     STEP_SHORT_NAMES=(
@@ -306,6 +321,8 @@ update_language_arrays() {
         "$STEP_SHORT_11"
         "$STEP_SHORT_12"
         "$STEP_SHORT_13"
+        "$STEP_SHORT_14"
+        "$STEP_SHORT_15"
     )
 }
 
@@ -339,6 +356,8 @@ STEP_CHECK_FIRMWARE=$STEP_CHECK_FIRMWARE
 STEP_CLEANUP_APT=$STEP_CLEANUP_APT
 STEP_CLEANUP_KERNELS=$STEP_CLEANUP_KERNELS
 STEP_CLEANUP_DISK=$STEP_CLEANUP_DISK
+STEP_CLEANUP_DOCKER=$STEP_CLEANUP_DOCKER
+STEP_CHECK_SMART=$STEP_CHECK_SMART
 STEP_CHECK_REBOOT=$STEP_CHECK_REBOOT
 EOF
     local result=$?
@@ -741,7 +760,7 @@ print_box_line() {
 
     # Posicionar cursor en columna fija para borde derecho (independiente de Unicode)
     printf '\033[%dG' "$BOX_WIDTH"
-    printf '%b\n' "${BOX_BORDER:-$BLUE}║${NC}"
+    printf '%b\033[K\n' "${BOX_BORDER:-$BLUE}║${NC}"
 }
 
 # Imprimir línea centrada - MÉTODO ULTRA-ROBUSTO
@@ -772,7 +791,7 @@ print_box_center() {
 
     # Posicionar cursor en columna fija para borde derecho
     printf '\033[%dG' "$BOX_WIDTH"
-    printf '%b\n' "${BOX_BORDER:-$BLUE}║${NC}"
+    printf '%b\033[K\n' "${BOX_BORDER:-$BLUE}║${NC}"
 }
 
 # Imprimir separador horizontal
@@ -1077,6 +1096,8 @@ count_active_steps() {
     [ "$STEP_CLEANUP_APT" = 1 ] && ((TOTAL_STEPS++))
     [ "$STEP_CLEANUP_KERNELS" = 1 ] && ((TOTAL_STEPS++))
     [ "$STEP_CLEANUP_DISK" = 1 ] && ((TOTAL_STEPS++))
+    [ "$STEP_CLEANUP_DOCKER" = 1 ] && ((TOTAL_STEPS++))
+    [ "$STEP_CHECK_SMART" = 1 ] && ((TOTAL_STEPS++))
     [ "$STEP_CHECK_REBOOT" = 1 ] && ((TOTAL_STEPS++))
 }
 
@@ -1143,7 +1164,7 @@ show_step_summary() {
     done
 
     print_box_sep
-    print_box_line "${MENU_TOTAL}: ${GREEN}${TOTAL_STEPS}${NC}/13 ${MENU_STEPS}    ${MENU_EST_TIME}: ${CYAN}~$((TOTAL_STEPS / 2 + 1)) ${MENU_MIN}${NC}"
+    print_box_line "${MENU_TOTAL}: ${GREEN}${TOTAL_STEPS}${NC}/15 ${MENU_STEPS}    ${MENU_EST_TIME}: ${CYAN}~$((TOTAL_STEPS / 2 + 1)) ${MENU_MIN}${NC}"
     print_box_bottom
     echo ""
 
@@ -1382,7 +1403,10 @@ step_check_dependencies() {
     
     TOOLS[snap]="Gestor de aplicaciones Snap"
     TOOL_STEPS[snap]=$STEP_UPDATE_SNAP
-    
+
+    TOOLS[smartctl]="Diagnósticos SMART de discos"
+    TOOL_STEPS[smartctl]=$STEP_CHECK_SMART
+
     local missing=()
     local missing_names=()
     local skipped_tools=()
@@ -1428,6 +1452,7 @@ step_check_dependencies() {
                         fwupdmgr) packages_to_install="$packages_to_install fwupd" ;;
                         flatpak) packages_to_install="$packages_to_install flatpak" ;;
                         snap) packages_to_install="$packages_to_install snapd" ;;
+                        smartctl) packages_to_install="$packages_to_install smartmontools" ;;
                     esac
                 done
                 
@@ -1930,7 +1955,165 @@ step_cleanup_disk() {
 }
 
 # ============================================================================
-# PASO 13: VERIFICAR NECESIDAD DE REINICIO
+# PASO 13: LIMPIEZA DOCKER/PODMAN
+# ============================================================================
+
+step_cleanup_docker() {
+    [ "$STEP_CLEANUP_DOCKER" = 0 ] && return
+
+    print_step "${MSG_DOCKER_CLEANING}"
+
+    local docker_available=false
+    local podman_available=false
+    local space_before space_after space_freed
+
+    command -v docker &>/dev/null && docker_available=true
+    command -v podman &>/dev/null && podman_available=true
+
+    if ! $docker_available && ! $podman_available; then
+        echo "→ ${MSG_DOCKER_NOT_INSTALLED}"
+        log "INFO" "${MSG_DOCKER_NOT_INSTALLED}"
+        STAT_DOCKER="$ICON_SKIP"
+        return
+    fi
+
+    space_before=$(df / --output=used | tail -1)
+
+    if $docker_available; then
+        echo "→ ${MSG_DOCKER_PRUNING}"
+        if [ "$DRY_RUN" = true ]; then
+            echo "  [DRY-RUN] docker system prune -af --volumes"
+        else
+            docker system prune -af --volumes 2>&1 | while read -r line; do
+                log "DEBUG" "$line"
+            done
+        fi
+    fi
+
+    if $podman_available; then
+        echo "→ ${MSG_PODMAN_PRUNING}"
+        if [ "$DRY_RUN" = true ]; then
+            echo "  [DRY-RUN] podman system prune -af --volumes"
+        else
+            podman system prune -af --volumes 2>&1 | while read -r line; do
+                log "DEBUG" "$line"
+            done
+        fi
+    fi
+
+    space_after=$(df / --output=used | tail -1)
+    space_freed=$(( (space_before - space_after) / 1024 ))
+
+    if [ "$space_freed" -gt 0 ]; then
+        printf "→ ${MSG_DOCKER_FREED}\n" "${space_freed}MB"
+        log "SUCCESS" "$(printf "${MSG_DOCKER_FREED}" "${space_freed}MB")"
+    fi
+
+    STAT_DOCKER="$ICON_OK"
+    log "SUCCESS" "${MSG_DOCKER_CLEANUP_OK}"
+}
+
+# ============================================================================
+# PASO 14: VERIFICACION SALUD DE DISCOS (SMART)
+# ============================================================================
+
+step_check_smart() {
+    [ "$STEP_CHECK_SMART" = 0 ] && return
+
+    print_step "${MSG_SMART_CHECKING}"
+
+    if ! command -v smartctl &>/dev/null; then
+        echo "→ ${MSG_SMART_NOT_INSTALLED}"
+        echo "  ${MSG_SMART_INSTALL_HINT}"
+
+        if [ "$UNATTENDED" = false ] && [ "$DRY_RUN" = false ]; then
+            read -p "${PROMPT_INSTALL_SMARTMONTOOLS} " -n 1 -r
+            echo
+            if [[ $REPLY =~ $PROMPT_YES_PATTERN ]]; then
+                echo "→ ${MSG_INSTALLING_SMARTMONTOOLS}"
+                if apt install -y smartmontools; then
+                    log "SUCCESS" "${MSG_SMARTMONTOOLS_INSTALLED}"
+                    echo "→ ${MSG_SMARTMONTOOLS_INSTALLED}"
+                else
+                    log "WARN" "${MSG_SMARTMONTOOLS_INSTALL_FAILED}"
+                    STAT_SMART="$ICON_SKIP"
+                    return
+                fi
+            else
+                log "WARN" "${MSG_SMART_NOT_INSTALLED}"
+                STAT_SMART="$ICON_SKIP"
+                return
+            fi
+        else
+            log "WARN" "${MSG_SMART_NOT_INSTALLED}"
+            STAT_SMART="$ICON_SKIP"
+            return
+        fi
+    fi
+
+    local disks=()
+    local disk health_status has_warning=false has_error=false
+
+    # Detectar discos SATA/SAS
+    for disk in /dev/sd?; do
+        [ -b "$disk" ] && disks+=("$disk")
+    done
+
+    # Detectar discos NVMe
+    for disk in /dev/nvme?n1; do
+        [ -b "$disk" ] && disks+=("$disk")
+    done
+
+    if [ ${#disks[@]} -eq 0 ]; then
+        echo "→ ${MSG_SMART_NO_DISKS}"
+        log "INFO" "${MSG_SMART_NO_DISKS}"
+        STAT_SMART="$ICON_SKIP"
+        return
+    fi
+
+    for disk in "${disks[@]}"; do
+        printf "→ ${MSG_SMART_CHECKING_DISK}\n" "$disk"
+        log "INFO" "$(printf "${MSG_SMART_CHECKING_DISK}" "$disk")"
+
+        # Obtener estado de salud
+        health_status=$(smartctl -H "$disk" 2>/dev/null | grep -E "SMART overall-health|SMART Health Status")
+
+        if echo "$health_status" | grep -qiE "PASSED|OK"; then
+            echo "  ${FIXED_GREEN}[OK]${NC} $disk"
+        elif echo "$health_status" | grep -qi "FAILED"; then
+            echo "  ${FIXED_RED}[FAIL]${NC} $disk - ${MSG_SMART_DISK_FAILING}"
+            log "ERROR" "$disk: ${MSG_SMART_DISK_FAILING}"
+            has_error=true
+        else
+            # Verificar atributos críticos
+            local reallocated pending
+            reallocated=$(smartctl -A "$disk" 2>/dev/null | grep -i "Reallocated_Sector" | awk '{print $NF}')
+            pending=$(smartctl -A "$disk" 2>/dev/null | grep -i "Current_Pending" | awk '{print $NF}')
+
+            if [ "${reallocated:-0}" -gt 0 ] || [ "${pending:-0}" -gt 0 ]; then
+                echo "  ${FIXED_YELLOW}[!!]${NC} $disk - ${MSG_SMART_DISK_WARNING}"
+                log "WARN" "$disk: ${MSG_SMART_DISK_WARNING} (Reallocated: ${reallocated:-0}, Pending: ${pending:-0})"
+                has_warning=true
+            else
+                echo "  ${FIXED_GREEN}[OK]${NC} $disk"
+            fi
+        fi
+    done
+
+    if $has_error; then
+        STAT_SMART="$ICON_FAIL"
+        log "ERROR" "${MSG_SMART_ERRORS_FOUND}"
+    elif $has_warning; then
+        STAT_SMART="$ICON_WARN"
+        log "WARN" "${MSG_SMART_WARNINGS_FOUND}"
+    else
+        STAT_SMART="$ICON_OK"
+        log "SUCCESS" "${MSG_SMART_ALL_OK}"
+    fi
+}
+
+# ============================================================================
+# PASO 15: VERIFICAR NECESIDAD DE REINICIO
 # ============================================================================
 
 step_check_reboot() {
@@ -2076,20 +2259,26 @@ show_final_summary() {
     [ $space_freed_boot -lt 0 ] && space_freed_boot=0
     local total_freed=$((space_freed_root + space_freed_boot))
 
-    # Mapear STAT_* a STEP_STATUS_ARRAY para resumen
-    # Índice: 0=Conectividad, 1=Dependencias, 2=Backup, 3=Snapshot, 4=Repos
-    #         5=Upgrade, 6=Flatpak, 7=Snap, 8=Firmware, 9=APT, 10=Kernels, 11=Disco, 12=Reinicio
-    local step_vars=("STEP_CHECK_CONNECTIVITY" "STEP_CHECK_DEPENDENCIES" "STEP_BACKUP_TAR"
-                     "STEP_SNAPSHOT_TIMESHIFT" "STEP_UPDATE_REPOS" "STEP_UPGRADE_SYSTEM"
-                     "STEP_UPDATE_FLATPAK" "STEP_UPDATE_SNAP" "STEP_CHECK_FIRMWARE"
-                     "STEP_CLEANUP_APT" "STEP_CLEANUP_KERNELS" "STEP_CLEANUP_DISK" "STEP_CHECK_REBOOT")
-    local stat_vars=("STAT_CONNECTIVITY" "STAT_DEPENDENCIES" "STAT_BACKUP_TAR" "STAT_SNAPSHOT"
-                     "STAT_REPO" "STAT_UPGRADE" "STAT_FLATPAK" "STAT_SNAP" "STAT_FIRMWARE"
-                     "STAT_CLEAN_APT" "STAT_CLEAN_KERNEL" "STAT_CLEAN_DISK" "STAT_REBOOT")
+    # Mapear STAT_* a STEP_STATUS_ARRAY para resumen (orden lógico por fases)
+    # Fase 1: 0=Conectividad, 1=Dependencias, 2=SMART
+    # Fase 2: 3=Backup, 4=Snapshot
+    # Fase 3: 5=Repos, 6=Upgrade, 7=Flatpak, 8=Snap, 9=Firmware
+    # Fase 4: 10=APT, 11=Kernels, 12=Disco, 13=Docker
+    # Fase 5: 14=Reinicio
+    local step_vars=("STEP_CHECK_CONNECTIVITY" "STEP_CHECK_DEPENDENCIES" "STEP_CHECK_SMART"
+                     "STEP_BACKUP_TAR" "STEP_SNAPSHOT_TIMESHIFT" "STEP_UPDATE_REPOS"
+                     "STEP_UPGRADE_SYSTEM" "STEP_UPDATE_FLATPAK" "STEP_UPDATE_SNAP"
+                     "STEP_CHECK_FIRMWARE" "STEP_CLEANUP_APT" "STEP_CLEANUP_KERNELS"
+                     "STEP_CLEANUP_DISK" "STEP_CLEANUP_DOCKER" "STEP_CHECK_REBOOT")
+    local stat_vars=("STAT_CONNECTIVITY" "STAT_DEPENDENCIES" "STAT_SMART"
+                     "STAT_BACKUP_TAR" "STAT_SNAPSHOT" "STAT_REPO"
+                     "STAT_UPGRADE" "STAT_FLATPAK" "STAT_SNAP" "STAT_FIRMWARE"
+                     "STAT_CLEAN_APT" "STAT_CLEAN_KERNEL" "STAT_CLEAN_DISK"
+                     "STAT_DOCKER" "STAT_REBOOT")
 
     # Contar resultados y determinar estados
     local success_count=0 error_count=0 skipped_count=0 warning_count=0
-    for i in {0..12}; do
+    for i in {0..14}; do
         local step_var="${step_vars[$i]}"
         local stat_var="${stat_vars[$i]}"
         local step_enabled="${!step_var}"
@@ -2161,7 +2350,7 @@ show_final_summary() {
         local line=""
         for col in {0..2}; do
             local idx=$((row * 3 + col))
-            if [ $idx -le 12 ]; then
+            if [ $idx -le 14 ]; then
                 local icon=$(get_step_icon_summary "${STEP_STATUS_ARRAY[$idx]}")
                 # Nombre con ancho fijo de 10 chars
                 local name
@@ -2211,6 +2400,91 @@ show_final_summary() {
 }
 
 # ============================================================================
+# FUNCIONES DE SYSTEMD TIMER
+# ============================================================================
+
+generate_systemd_timer() {
+    local schedule="$1"
+    local script_path="$(readlink -f "$0")"
+    local service_file="/etc/systemd/system/autoclean.service"
+    local timer_file="/etc/systemd/system/autoclean.timer"
+
+    local oncalendar
+    case "$schedule" in
+        daily)   oncalendar="*-*-* 02:00:00" ;;
+        weekly)  oncalendar="Sun *-*-* 02:00:00" ;;
+        monthly) oncalendar="*-*-01 02:00:00" ;;
+    esac
+
+    echo "$MSG_SCHEDULE_CREATING"
+
+    # Create service file
+    cat > "$service_file" << EOF
+[Unit]
+Description=Autoclean System Maintenance
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=$script_path -y --no-menu
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Create timer file
+    cat > "$timer_file" << EOF
+[Unit]
+Description=Autoclean Scheduled Maintenance Timer
+
+[Timer]
+OnCalendar=$oncalendar
+Persistent=true
+RandomizedDelaySec=1800
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    # Enable and start timer
+    systemctl daemon-reload
+    systemctl enable autoclean.timer
+    systemctl start autoclean.timer
+
+    echo ""
+    echo "$MSG_SCHEDULE_CREATED"
+    echo "  → $MSG_SCHEDULE_MODE: $schedule"
+    echo "  → $MSG_SCHEDULE_TIME: $oncalendar"
+    echo ""
+    systemctl status autoclean.timer --no-pager
+}
+
+remove_systemd_timer() {
+    echo "$MSG_SCHEDULE_REMOVING"
+    systemctl stop autoclean.timer 2>/dev/null
+    systemctl disable autoclean.timer 2>/dev/null
+    rm -f /etc/systemd/system/autoclean.service
+    rm -f /etc/systemd/system/autoclean.timer
+    systemctl daemon-reload
+    echo "$MSG_SCHEDULE_REMOVED"
+}
+
+show_schedule_status() {
+    if systemctl is-active autoclean.timer &>/dev/null; then
+        echo "$MSG_SCHEDULE_ACTIVE"
+        echo ""
+        systemctl status autoclean.timer --no-pager
+        echo ""
+        echo "$MSG_SCHEDULE_NEXT_RUN:"
+        systemctl list-timers autoclean.timer --no-pager
+    else
+        echo "$MSG_SCHEDULE_NOT_ACTIVE"
+    fi
+}
+
+# ============================================================================
 # PROCESAMIENTO DE ARGUMENTOS
 # ============================================================================
 
@@ -2245,6 +2519,23 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             ;;
+        --schedule)
+            if [ -n "$2" ] && [[ "$2" =~ ^(daily|weekly|monthly)$ ]]; then
+                SCHEDULE_MODE="$2"
+                shift 2
+            else
+                echo "Error: --schedule requires: daily, weekly, or monthly"
+                exit 1
+            fi
+            ;;
+        --unschedule)
+            UNSCHEDULE=true
+            shift
+            ;;
+        --schedule-status)
+            SCHEDULE_STATUS=true
+            shift
+            ;;
         --help)
             cat << 'EOF'
 Mantenimiento Integral para Distribuciones basadas en Debian/Ubuntu
@@ -2259,17 +2550,23 @@ Distribuciones soportadas:
 Uso: sudo ./autoclean.sh [opciones]
 
 Opciones:
-  --dry-run          Simular ejecución sin hacer cambios reales
-  -y, --unattended   Modo desatendido sin confirmaciones
-  --no-backup        No crear backup de configuraciones
-  --no-menu          Omitir menú interactivo (usar config por defecto)
-  --quiet            Modo silencioso (solo logs)
-  --help             Mostrar esta ayuda
+  --dry-run              Simular ejecución sin hacer cambios reales
+  -y, --unattended       Modo desatendido sin confirmaciones
+  --no-backup            No crear backup de configuraciones
+  --no-menu              Omitir menú interactivo (usar config por defecto)
+  --quiet                Modo silencioso (solo logs)
+  --lang LANG            Establecer idioma (en, es, pt, fr, de, it)
+  --schedule MODE        Crear timer systemd (daily, weekly, monthly)
+  --unschedule           Eliminar timer systemd programado
+  --schedule-status      Mostrar estado del timer programado
+  --help                 Mostrar esta ayuda
 
 Ejemplos:
   sudo ./autoclean.sh                    # Ejecución normal
   sudo ./autoclean.sh --dry-run          # Simular cambios
   sudo ./autoclean.sh -y                 # Modo desatendido
+  sudo ./autoclean.sh --schedule weekly  # Programar semanal
+  sudo ./autoclean.sh --schedule-status  # Ver estado del timer
 
 Configuración:
   Edita las variables STEP_* al inicio del script para
@@ -2301,6 +2598,24 @@ load_language
 
 # Cargar tema (usa SAVED_THEME si existe, o usa default)
 load_theme
+
+# Manejar operaciones de schedule (antes de ejecución principal)
+if [ "$SCHEDULE_STATUS" = true ]; then
+    show_schedule_status
+    exit 0
+fi
+
+if [ "$UNSCHEDULE" = true ]; then
+    check_root
+    remove_systemd_timer
+    exit 0
+fi
+
+if [ -n "$SCHEDULE_MODE" ]; then
+    check_root
+    generate_systemd_timer "$SCHEDULE_MODE"
+    exit 0
+fi
 
 # Verificar permisos de root ANTES de cualquier operación
 check_root
@@ -2339,18 +2654,29 @@ validate_step_dependencies
 check_disk_space
 
 # Ejecutar pasos configurados
+# FASE 1: Verificaciones previas
 step_check_connectivity
 step_check_dependencies
+step_check_smart
+
+# FASE 2: Backups
 step_backup_tar
 step_snapshot_timeshift
+
+# FASE 3: Actualizaciones
 step_update_repos
 step_upgrade_system
 step_update_flatpak
 step_update_snap
 step_check_firmware
+
+# FASE 4: Limpieza
 step_cleanup_apt
 step_cleanup_kernels
 step_cleanup_disk
+step_cleanup_docker
+
+# FASE 5: Verificación final
 step_check_reboot
 
 # Mostrar resumen final

@@ -59,7 +59,7 @@ La deteccion se realiza automaticamente usando `/etc/os-release` y el script ada
 ### Interfaz de Usuario
 
 - **Interfaz Enterprise 100% ASCII**: UI sin emojis para compatibilidad total con cualquier terminal
-- **Menu interactivo en 3 columnas**: Grid 5x3 con los 13 pasos, navegacion con flechas ←/→/↑/↓
+- **Menu interactivo en 3 columnas**: Grid 5x3 con los 15 pasos, navegacion con flechas ←/→/↑/↓
 - **Resumen de ejecucion en 3 columnas**: Reporte final compacto con estado de cada paso
 - **Alineacion robusta con cursor absoluto**: Usa secuencias ANSI `\033[78G` para bordes perfectos
 - **Iconos ASCII puros**: `[OK]`, `[XX]`, `[--]`, `[!!]`, `[..]` para alineacion perfecta
@@ -108,7 +108,7 @@ La deteccion se realiza automaticamente usando `/etc/os-release` y el script ada
 
 ### Control y Modularidad
 
-- **13 pasos independientes**: Cada uno puede activarse/desactivarse individualmente
+- **15 pasos independientes**: Cada uno puede activarse/desactivarse individualmente
 - **Rotacion automatica de logs**: Mantiene solo las ultimas 5 ejecuciones
 - **Rotacion automatica de backups**: Mantiene solo los ultimos 5 backups
 - **Modo Dry-Run**: Simula cambios sin ejecutarlos realmente
@@ -135,10 +135,11 @@ La deteccion se realiza automaticamente usando `/etc/os-release` y el script ada
 - `fwupd` - Gestion de actualizaciones de firmware
 - `flatpak` - Si usas aplicaciones Flatpak
 - `snapd` - Si usas aplicaciones Snap
+- `smartmontools` - Diagnosticos SMART de discos duros
 
 Instalacion manual de herramientas recomendadas:
 ```bash
-sudo apt install timeshift needrestart fwupd flatpak
+sudo apt install timeshift needrestart fwupd flatpak smartmontools
 ```
 
 ---
@@ -176,7 +177,7 @@ sudo ./autoclean.sh -y
 
 ## Configuracion Avanzada
 
-El script incluye 13 pasos modulares que puedes activar/desactivar editando las variables `STEP_*` al inicio del script:
+El script incluye 15 pasos modulares que puedes activar/desactivar editando las variables `STEP_*` al inicio del script:
 
 | Variable | Descripcion | Default |
 |----------|-------------|---------|
@@ -192,6 +193,8 @@ El script incluye 13 pasos modulares que puedes activar/desactivar editando las 
 | `STEP_CLEANUP_APT` | Limpieza de paquetes huerfanos | ON |
 | `STEP_CLEANUP_KERNELS` | Eliminar kernels antiguos | ON |
 | `STEP_CLEANUP_DISK` | Limpiar logs y cache | ON |
+| `STEP_CLEANUP_DOCKER` | Limpiar Docker/Podman (images, containers, volumes) | OFF |
+| `STEP_CHECK_SMART` | Verificar salud de discos (SMART) | ON |
 | `STEP_CHECK_REBOOT` | Verificar necesidad de reinicio | ON |
 
 **Ejemplo de configuracion personalizada:**
@@ -233,7 +236,7 @@ El script muestra un resumen detallado al finalizar con el estado de cada paso:
 
 ## Menu Interactivo
 
-Al ejecutar el script sin argumentos, se muestra un menu interactivo en formato grid 3x5 que permite seleccionar que pasos ejecutar:
+Al ejecutar el script sin argumentos, se muestra un menu interactivo en formato grid 5x3 que permite seleccionar que pasos ejecutar:
 
 ```
 ╔════════════════════════════════════════════════════════════════════════════╗
@@ -246,11 +249,11 @@ Al ejecutar el script sin argumentos, se muestra un menu interactivo en formato 
 ║  [x]Snapshot     [x]Repos       >[x]Upgrade                                ║
 ║  [x]Flatpak      [ ]Snap         [x]Firmware                               ║
 ║  [x]APT Clean    [x]Kernels      [x]Disco                                  ║
-║  [x]Reinicio                                                               ║
+║  [ ]Docker       [x]SMART        [x]Reinicio                               ║
 ╠════════════════════════════════════════════════════════════════════════════╣
 ║ > Ejecuta apt full-upgrade para actualizar paquetes                        ║
 ╠════════════════════════════════════════════════════════════════════════════╣
-║ Seleccionados: 12/13    Perfil: Guardado                                   ║
+║ Seleccionados: 13/15    Perfil: Guardado                                   ║
 ╠════════════════════════════════════════════════════════════════════════════╣
 ║          [ENTER] Ejecutar [A] Todos [N] Ninguno [G] Guardar [Q] Salir      ║
 ╚════════════════════════════════════════════════════════════════════════════╝
@@ -363,13 +366,37 @@ sudo ./autoclean.sh --dry-run
 sudo ./autoclean.sh [opciones]
 
 Opciones:
-  --dry-run          Simular ejecucion sin hacer cambios reales
-  -y, --unattended   Modo desatendido sin confirmaciones
-  --no-backup        No crear backup de configuraciones
-  --no-menu          Omitir menu interactivo (usar config guardada o por defecto)
-  --quiet            Modo silencioso (solo logs)
-  --lang CODIGO      Forzar idioma (en, es, pt, fr, de, it)
-  --help             Mostrar ayuda completa
+  --dry-run            Simular ejecucion sin hacer cambios reales
+  -y, --unattended     Modo desatendido sin confirmaciones
+  --no-backup          No crear backup de configuraciones
+  --no-menu            Omitir menu interactivo (usar config guardada o por defecto)
+  --quiet              Modo silencioso (solo logs)
+  --lang CODIGO        Forzar idioma (en, es, pt, fr, de, it)
+  --schedule MODO      Crear timer systemd (daily, weekly, monthly)
+  --unschedule         Eliminar timer systemd programado
+  --schedule-status    Mostrar estado del timer programado
+  --help               Mostrar ayuda completa
+```
+
+### Programacion Automatica con Systemd Timer
+
+El script puede programarse automaticamente usando systemd timers:
+
+```bash
+# Programar ejecucion diaria a las 2:00 AM
+sudo ./autoclean.sh --schedule daily
+
+# Programar ejecucion semanal (domingos a las 2:00 AM)
+sudo ./autoclean.sh --schedule weekly
+
+# Programar ejecucion mensual (dia 1 a las 2:00 AM)
+sudo ./autoclean.sh --schedule monthly
+
+# Ver estado del timer programado
+sudo ./autoclean.sh --schedule-status
+
+# Eliminar timer programado
+sudo ./autoclean.sh --unschedule
 ```
 
 ---
@@ -543,15 +570,33 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 - **Scripts totales:** 1
 - **Script principal:** autoclean.sh
 - **Version actual:** 2025.12
-- **Lineas de codigo:** ~2300+
-- **Pasos modulares:** 13
+- **Lineas de codigo:** ~2700+
+- **Pasos modulares:** 15
 - **Idiomas soportados:** 6 (en, es, pt, fr, de, it)
 - **Temas de colores:** 5 (Default, Norton Commander, Bloody Red, Green Terminal, Amber Terminal)
 - **Distribuciones soportadas:** 7+ (auto-deteccion)
 - **Compatible con:** Debian, Ubuntu, Mint, Pop!_OS, Elementary, Zorin, Kali y derivadas
-- **Interfaz:** Enterprise UI con grid 3x5, navegacion bidimensional, selector de idioma y temas
+- **Interfaz:** Enterprise UI con grid 5x3, navegacion bidimensional, selector de idioma y temas
 
 ---
 
+## Changelog v2025.12
+
+### Nuevas Funcionalidades
+- **Limpieza Docker/Podman** - Nuevo paso para limpiar imagenes, contenedores y volumenes sin usar
+- **Verificacion SMART** - Diagnostico de salud de discos duros antes de realizar cambios
+- **Programacion Systemd Timer** - Opciones `--schedule`, `--unschedule`, `--schedule-status` para automatizar ejecucion
+
+### Mejoras
+- **Orden logico de pasos** - Reorganizado en 5 fases: Verificaciones, Backups, Actualizaciones, Limpieza, Final
+- **SMART en posicion temprana** - Verifica salud de discos ANTES de hacer cambios al sistema
+- **Instalacion interactiva de herramientas** - Ofrece instalar smartmontools si no esta disponible
+- **EXECUTION SUMMARY completo** - Ahora muestra los 15 pasos correctamente
+
+### Correcciones
+- **Fix Norton Commander theme** - Corregido overflow de fondo azul fuera de los margenes
+- **Fix resumen de ejecucion** - Arreglado para mostrar 15/15 pasos en lugar de 13/13
+
+---
 
 **Ultima actualizacion del README:** Diciembre 2025

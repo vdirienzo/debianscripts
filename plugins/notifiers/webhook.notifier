@@ -196,10 +196,33 @@ notifier_send() {
     local message="$2"
     local severity="${3:-info}"
 
-    # Valores por defecto
+    # SECURITY: Validar URL antes de usarla
+    # Solo permitir http:// o https:// seguido de caracteres válidos de URL
+    if [[ ! "$NOTIFIER_WEBHOOK_URL" =~ ^https?://[a-zA-Z0-9._:/@%?=\&\#+-]+$ ]]; then
+        echo "ERROR: Invalid webhook URL format" >&2
+        return 1
+    fi
+
+    # Valores por defecto con whitelist
     local method="${NOTIFIER_WEBHOOK_METHOD:-POST}"
+    # SECURITY: Validar método HTTP (whitelist)
+    case "$method" in
+        GET|POST|PUT|PATCH) ;;  # métodos permitidos
+        *) method="POST" ;;      # fallback seguro
+    esac
+
     local preset="${NOTIFIER_WEBHOOK_PRESET:-generic}"
+    # SECURITY: Validar preset (whitelist)
+    case "$preset" in
+        generic|slack|discord|teams) ;;
+        *) preset="generic" ;;
+    esac
+
     local content_type="${NOTIFIER_WEBHOOK_CONTENT_TYPE:-application/json}"
+    # SECURITY: Validar content-type (solo caracteres seguros)
+    if [[ ! "$content_type" =~ ^[a-zA-Z0-9/+.-]+$ ]]; then
+        content_type="application/json"
+    fi
 
     # Generar payload segun preset
     local payload=""
@@ -221,9 +244,14 @@ notifier_send() {
         --max-time 30
     )
 
-    # Agregar header de autenticacion si existe
+    # SECURITY: Agregar header de autenticacion si existe (validar formato)
     if [[ -n "$NOTIFIER_WEBHOOK_AUTH_HEADER" ]]; then
-        curl_args+=(-H "$NOTIFIER_WEBHOOK_AUTH_HEADER")
+        # Solo permitir formato "Header-Name: value" sin caracteres peligrosos
+        if [[ "$NOTIFIER_WEBHOOK_AUTH_HEADER" =~ ^[A-Za-z][A-Za-z0-9_-]*:[[:space:]].+$ ]]; then
+            curl_args+=(-H "$NOTIFIER_WEBHOOK_AUTH_HEADER")
+        else
+            echo "WARN: Invalid auth header format, skipping" >&2
+        fi
     fi
 
     # Enviar request

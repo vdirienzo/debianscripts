@@ -1,0 +1,133 @@
+# ============================================================================
+# Autoclean Notifier Plugin: Desktop (notify-send)
+# ============================================================================
+# El notificador mas simple - usa notify-send para notificaciones de escritorio
+# No requiere configuracion adicional
+# ============================================================================
+
+# === METADATA ===
+NOTIFIER_NAME="Desktop"
+NOTIFIER_CODE="desktop"
+NOTIFIER_DESCRIPTION="Notificaciones de escritorio via notify-send"
+NOTIFIER_DEPS="notify-send"
+
+# === CONFIGURACION ===
+# Este notificador no requiere configuracion
+declare -A NOTIFIER_FIELDS=()
+
+# === FUNCIONES ===
+
+# Detectar display del usuario real (para cuando se ejecuta con sudo)
+_detect_user_display() {
+    # Si ya tenemos DISPLAY, usarlo
+    if [ -n "$DISPLAY" ]; then
+        echo "$DISPLAY"
+        return 0
+    fi
+    # Buscar display del usuario que ejecuto sudo
+    if [ -n "$SUDO_USER" ]; then
+        # Intentar obtener el display del usuario
+        local user_display
+        user_display=$(who 2>/dev/null | grep "$SUDO_USER" | grep -oE '\(:[0-9]+\)' | head -1 | tr -d '()')
+        if [ -n "$user_display" ]; then
+            echo "$user_display"
+            return 0
+        fi
+    fi
+    # Default a :0
+    echo ":0"
+}
+
+notifier_check_deps() {
+    # Verificar que notify-send esta disponible
+    if ! command -v notify-send &>/dev/null; then
+        return 1
+    fi
+    return 0
+}
+
+notifier_is_configured() {
+    # Desktop no requiere configuracion, solo deps
+    notifier_check_deps
+}
+
+notifier_send() {
+    local title="$1"
+    local message="$2"
+    local severity="${3:-info}"
+
+    # Mapear severidad a urgencia de notify-send
+    local urgency="normal"
+    local icon="dialog-information"
+
+    case "$severity" in
+        critical|error)
+            urgency="critical"
+            icon="dialog-error"
+            ;;
+        warning)
+            urgency="normal"
+            icon="dialog-warning"
+            ;;
+        success)
+            urgency="low"
+            icon="emblem-default"
+            ;;
+        *)
+            urgency="normal"
+            icon="dialog-information"
+            ;;
+    esac
+
+    # Detectar display
+    local user_display
+    user_display=$(_detect_user_display)
+
+    # Si estamos como root via sudo, ejecutar como el usuario original
+    if [ -n "$SUDO_USER" ]; then
+        local user_id
+        user_id=$(id -u "$SUDO_USER" 2>/dev/null)
+        sudo -u "$SUDO_USER" DISPLAY="$user_display" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/${user_id}/bus" \
+            notify-send "$title" "$message" -u "$urgency" -i "$icon" 2>/dev/null
+        return $?
+    fi
+
+    # Ejecucion normal (no sudo)
+    DISPLAY="$user_display" notify-send "$title" "$message" -u "$urgency" -i "$icon" 2>/dev/null
+    return $?
+}
+
+notifier_test() {
+    notifier_send "Autoclean Test" "Desktop notifications are working correctly!" "success"
+}
+
+notifier_help() {
+    cat << 'HELP_EOF'
+================================================================================
+                    DESKTOP NOTIFICATIONS - SETUP GUIDE
+================================================================================
+
+Desktop notifications use 'notify-send' to display system notifications.
+
+REQUIREMENTS:
+  - notify-send (usually from libnotify-bin package)
+  - A running display server (X11 or Wayland)
+  - A notification daemon (most desktop environments include one)
+
+INSTALLATION:
+  sudo apt install libnotify-bin
+
+HOW IT WORKS:
+  - Automatically detects your display session
+  - Works correctly when running with sudo
+  - Sends notifications to your desktop environment
+
+NOTES:
+  - Only works when running from a graphical session
+  - Won't work in pure SSH sessions or TTY consoles
+  - Notifications appear in your desktop's notification area
+
+NO CONFIGURATION NEEDED - just enable and it works!
+================================================================================
+HELP_EOF
+}

@@ -86,6 +86,22 @@ La deteccion se realiza automaticamente usando `/etc/os-release` y el script ada
 - **Crea tu propio tema**: Tutorial incluido en `themes/TUTORIAL.md`
 - **Configuracion persistente**: El tema seleccionado se guarda en `autoclean.conf`
 
+### Sistema de Notificaciones Multi-canal
+
+- **Arquitectura de plugins**: Los notificadores se cargan dinamicamente desde `plugins/notifiers/`
+- **Notificadores incluidos**: Desktop (notify-send), Telegram Bot API, ntfy.sh
+- **Menu dedicado**: Tecla `[O]` en el menu principal para gestionar notificaciones
+- **Configuracion por servicio**: Cada notificador tiene su propia pantalla de configuracion
+- **Ayuda integrada**: Instrucciones de setup para cada servicio (como crear bot de Telegram, etc.)
+- **Notificaciones automaticas**: Se envian al finalizar la ejecucion y en errores criticos
+- **Crea tu propio notificador**: Tutorial incluido en `plugins/notifiers/TUTORIAL.md`
+
+| Notificador | Descripcion | Configuracion |
+|-------------|-------------|---------------|
+| Desktop | Notificaciones de escritorio via notify-send | Ninguna (auto-detecta sesion) |
+| Telegram | Mensajes via Telegram Bot API | Bot Token + Chat ID |
+| ntfy.sh | Push notifications via ntfy.sh | Topic (+ Server/Token opcional) |
+
 | Tema | Descripcion | Fondo |
 |------|-------------|-------|
 | Default | Azul/Cyan/Verde - tema original | - |
@@ -360,6 +376,7 @@ Al ejecutar el script sin argumentos, se muestra un menu interactivo en formato 
 | D | Borrar configuracion guardada |
 | L | Selector de idioma |
 | T | Selector de tema |
+| O | Menu de notificaciones |
 | Q | Salir sin ejecutar |
 
 ### Configuracion Persistente
@@ -682,19 +699,25 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 - **Scripts totales:** 1
 - **Script principal:** autoclean.sh
 - **Version actual:** 2025.12
-- **Lineas de codigo:** ~2700+
+- **Lineas de codigo:** ~3500+
 - **Pasos modulares:** 15
 - **Idiomas soportados:** 6 (en, es, pt, fr, de, it) - deteccion dinamica
 - **Temas de colores:** 9 (Default, Norton, Turbo, Green, Amber, Dracula, Matrix, Synthwave, Monokai) - deteccion dinamica
+- **Notificadores:** 3 (Desktop, Telegram, ntfy.sh) - arquitectura de plugins extensible
 - **Distribuciones soportadas:** 7+ (auto-deteccion)
 - **Compatible con:** Debian, Ubuntu, Mint, Pop!_OS, Elementary, Zorin, Kali y derivadas
-- **Interfaz:** Enterprise UI con grid 5x3, navegacion bidimensional, selector de idioma y temas
+- **Interfaz:** Enterprise UI con grid 5x3, navegacion bidimensional, selector de idioma, temas y notificaciones
 
 ---
 
 ## Changelog v2025.12
 
 ### Nuevas Funcionalidades
+- **Sistema de Notificaciones Multi-canal** - Arquitectura de plugins para notificaciones con menu dedicado `[O]`
+- **Notificador Desktop** - Notificaciones de escritorio via notify-send (funciona con sudo)
+- **Notificador Telegram** - Notificaciones via Telegram Bot API con configuracion guiada
+- **Notificador ntfy.sh** - Push notifications via ntfy.sh con soporte para servidores self-hosted
+- **Tutorial de notificadores** - Documentacion en `plugins/notifiers/TUTORIAL.md` para crear notificadores custom
 - **Perfiles Predefinidos** - Nuevo argumento `--profile` con 5 perfiles: server, desktop, developer, minimal, **custom**
 - **Perfil Custom** - Nuevo perfil que lee toda la configuracion desde `autoclean.conf` (idioma, tema y pasos)
 - **Auto-generacion de configuracion** - Si `autoclean.conf` no existe, se genera automaticamente con valores por defecto
@@ -708,7 +731,9 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 - **Tutorial de temas** - Documentacion en `themes/TUTORIAL.md` para crear temas personalizados
 
 ### Mejoras
-- **Archivo de configuracion mejorado** - Ahora incluye SAVED_PROFILE, idioma, tema y todos los pasos
+- **UI de configuracion de notificadores** - Interfaz clara con campos numerados, indicadores de estado y guardado directo
+- **Descripciones de notificadores traducidas** - Las descripciones se adaptan al idioma seleccionado
+- **Archivo de configuracion mejorado** - Ahora incluye SAVED_PROFILE, idioma, tema, notificadores y todos los pasos
 - **Orden logico de pasos** - Reorganizado en 5 fases: Verificaciones, Backups, Actualizaciones, Limpieza, Final
 - **SMART en posicion temprana** - Verifica salud de discos ANTES de hacer cambios al sistema
 - **Instalacion interactiva de herramientas** - Ofrece instalar smartmontools si no esta disponible
@@ -718,6 +743,7 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 
 ### Seguridad
 - **Funcion validate_source_file()** - Valida archivos antes de `source` para prevenir inyeccion de codigo
+- **Funcion validate_notifier_file()** - Validacion especifica para plugins que permite comandos pero bloquea patrones peligrosos
 - **Variables seguras con declare -n** - Usa nameref en lugar de eval para manipulacion de variables en el menu
 - **Limpieza segura con find** - Usa find con delimitadores seguros en lugar de ls | xargs rm
 

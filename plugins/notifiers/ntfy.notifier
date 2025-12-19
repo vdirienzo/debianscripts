@@ -1,0 +1,174 @@
+# ============================================================================
+# Autoclean Notifier Plugin: ntfy.sh
+# ============================================================================
+# Envia notificaciones push via ntfy.sh (servidor publico o self-hosted)
+# Servicio simple y gratuito: https://ntfy.sh
+# ============================================================================
+
+# === METADATA ===
+NOTIFIER_NAME="ntfy.sh"
+NOTIFIER_CODE="ntfy"
+NOTIFIER_DESCRIPTION="Push notifications via ntfy.sh"
+NOTIFIER_DEPS="curl"
+
+# === CONFIGURACION ===
+declare -A NOTIFIER_FIELDS=(
+    ["NOTIFIER_NTFY_TOPIC"]="Topic name (required)"
+    ["NOTIFIER_NTFY_SERVER"]="Server URL (default: ntfy.sh)"
+    ["NOTIFIER_NTFY_TOKEN"]="Access token (optional)"
+)
+
+# === FUNCIONES ===
+
+notifier_check_deps() {
+    command -v curl &>/dev/null
+}
+
+notifier_is_configured() {
+    [[ -n "$NOTIFIER_NTFY_TOPIC" ]]
+}
+
+notifier_send() {
+    local title="$1"
+    local message="$2"
+    local severity="${3:-info}"
+
+    # Servidor por defecto
+    local server="${NOTIFIER_NTFY_SERVER:-https://ntfy.sh}"
+
+    # Remover trailing slash si existe
+    server="${server%/}"
+
+    # Mapear severidad a prioridad ntfy (1=min, 5=max)
+    local priority=""
+    local tags=""
+    case "$severity" in
+        critical)
+            priority="5"
+            tags="rotating_light"
+            ;;
+        error)
+            priority="4"
+            tags="x"
+            ;;
+        warning)
+            priority="3"
+            tags="warning"
+            ;;
+        success)
+            priority="2"
+            tags="white_check_mark"
+            ;;
+        *)
+            priority="1"
+            tags="information_source"
+            ;;
+    esac
+
+    # Construir headers
+    local auth_header=""
+    if [[ -n "$NOTIFIER_NTFY_TOKEN" ]]; then
+        auth_header="-H \"Authorization: Bearer ${NOTIFIER_NTFY_TOKEN}\""
+    fi
+
+    # Enviar via ntfy
+    local response
+    local http_code
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+        -X POST "${server}/${NOTIFIER_NTFY_TOPIC}" \
+        -H "Title: ${title}" \
+        -H "Priority: ${priority}" \
+        -H "Tags: ${tags}" \
+        ${auth_header:+-H "Authorization: Bearer ${NOTIFIER_NTFY_TOKEN}"} \
+        -d "${message}" \
+        --connect-timeout 10 \
+        --max-time 30 \
+        2>/dev/null)
+
+    # Verificar respuesta (2xx = exito)
+    if [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+notifier_test() {
+    local hostname
+    hostname=$(hostname 2>/dev/null || echo "unknown")
+    notifier_send "Autoclean Test" "ntfy.sh notifications configured correctly!
+
+Host: ${hostname}
+Date: $(date '+%Y-%m-%d %H:%M:%S')
+Server: ${NOTIFIER_NTFY_SERVER:-https://ntfy.sh}
+Topic: ${NOTIFIER_NTFY_TOPIC}" "success"
+}
+
+notifier_help() {
+    cat << 'HELP_EOF'
+================================================================================
+                    NTFY.SH NOTIFICATIONS - SETUP GUIDE
+================================================================================
+
+WHAT IS NTFY.SH?
+----------------
+ntfy.sh is a simple HTTP-based pub-sub notification service. You can send
+notifications to your phone or desktop without signup, API keys, or complex
+configuration. Just pick a topic name and subscribe!
+
+STEP 1: Choose a Topic Name
+---------------------------
+Pick a unique, hard-to-guess topic name (it acts like a password):
+  Good:  autoclean-alerts-x7k9m2
+  Bad:   autoclean (too common, others might see your messages)
+
+STEP 2: Subscribe to Your Topic
+-------------------------------
+Install the ntfy app and subscribe to your topic:
+
+  Android: https://play.google.com/store/apps/details?id=io.heckel.ntfy
+  iOS:     https://apps.apple.com/app/ntfy/id1625396347
+  Web:     https://ntfy.sh/YOUR_TOPIC_NAME
+
+Or use the PWA at https://ntfy.sh in any browser.
+
+STEP 3: Configure in Autoclean
+------------------------------
+Enter the values in the configuration menu:
+  - Topic name: Your unique topic (required)
+  - Server URL: Leave empty for ntfy.sh, or enter your self-hosted server
+  - Access token: Only needed if your server requires authentication
+
+SELF-HOSTED SERVER:
+-------------------
+If you run your own ntfy server, enter the full URL:
+  Example: https://ntfy.example.com
+
+AUTHENTICATION (Optional):
+--------------------------
+If your ntfy server requires authentication:
+  1. Generate an access token in your ntfy server
+  2. Enter the token in the "Access token" field
+
+TESTING:
+--------
+Use the "Test" option to verify your configuration works.
+
+TROUBLESHOOTING:
+----------------
+- "403 Forbidden": Topic requires authentication, add your token
+- "404 Not Found": Check your server URL is correct
+- No notification: Check you're subscribed to the correct topic
+- For self-hosted: Ensure your server is accessible from this machine
+
+TIPS:
+-----
+- Keep your topic name secret - anyone who knows it can send you messages
+- Use a unique topic per server/purpose for better organization
+- Messages are stored for 12 hours by default on ntfy.sh
+
+MORE INFO: https://docs.ntfy.sh
+
+================================================================================
+HELP_EOF
+}

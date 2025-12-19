@@ -1,0 +1,126 @@
+# ============================================================================
+# Autoclean Notifier Plugin: Telegram Bot
+# ============================================================================
+# Envia notificaciones via Telegram Bot API
+# Requiere crear un bot con @BotFather y obtener el chat_id
+# ============================================================================
+
+# === METADATA ===
+NOTIFIER_NAME="Telegram"
+NOTIFIER_CODE="telegram"
+NOTIFIER_DESCRIPTION="Notificaciones via Telegram Bot API"
+NOTIFIER_DEPS="curl"
+
+# === CONFIGURACION ===
+declare -A NOTIFIER_FIELDS=(
+    ["NOTIFIER_TELEGRAM_BOT_TOKEN"]="Bot token (from @BotFather)"
+    ["NOTIFIER_TELEGRAM_CHAT_ID"]="Chat ID (user, group, or channel)"
+)
+
+# === FUNCIONES ===
+
+notifier_check_deps() {
+    command -v curl &>/dev/null
+}
+
+notifier_is_configured() {
+    [[ -n "$NOTIFIER_TELEGRAM_BOT_TOKEN" && -n "$NOTIFIER_TELEGRAM_CHAT_ID" ]]
+}
+
+notifier_send() {
+    local title="$1"
+    local message="$2"
+    local severity="${3:-info}"
+
+    # Agregar emoji segun severidad
+    local emoji=""
+    case "$severity" in
+        critical) emoji="🚨" ;;
+        error)    emoji="❌" ;;
+        warning)  emoji="⚠️" ;;
+        success)  emoji="✅" ;;
+        *)        emoji="ℹ️" ;;
+    esac
+
+    # Construir mensaje (sin Markdown para evitar problemas con caracteres especiales)
+    local full_message="${emoji} ${title}
+
+${message}"
+
+    # Enviar via API de Telegram (sin parse_mode para texto plano con emojis)
+    local response
+    response=$(curl -s -X POST \
+        "https://api.telegram.org/bot${NOTIFIER_TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d chat_id="${NOTIFIER_TELEGRAM_CHAT_ID}" \
+        -d text="${full_message}" \
+        --connect-timeout 10 \
+        --max-time 30 \
+        2>/dev/null)
+
+    # Verificar respuesta
+    if echo "$response" | grep -q '"ok":true'; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+notifier_test() {
+    local hostname
+    hostname=$(hostname 2>/dev/null || echo "unknown")
+    notifier_send "Autoclean Test" "Telegram notifications configured correctly!
+
+Host: ${hostname}
+Date: $(date '+%Y-%m-%d %H:%M:%S')" "success"
+}
+
+notifier_help() {
+    cat << 'HELP_EOF'
+================================================================================
+                    TELEGRAM NOTIFICATIONS - SETUP GUIDE
+================================================================================
+
+STEP 1: Create a Telegram Bot
+------------------------------
+1. Open Telegram and search for @BotFather
+2. Send /newbot command
+3. Follow the prompts to name your bot
+4. Copy the bot token (looks like: 123456789:ABCdefGHI...)
+
+STEP 2: Get your Chat ID
+------------------------
+Option A - For personal notifications:
+  1. Search for @userinfobot on Telegram
+  2. Start the bot and it will show your user ID
+  3. Use this number as your Chat ID
+
+Option B - For group notifications:
+  1. Add your bot to the group
+  2. Send a message in the group
+  3. Visit: https://api.telegram.org/bot<TOKEN>/getUpdates
+  4. Look for "chat":{"id":-XXXXXXX} (negative number for groups)
+
+Option C - For channel notifications:
+  1. Add your bot as admin to the channel
+  2. The Chat ID is @channelname or the channel's numeric ID
+
+STEP 3: Configure in Autoclean
+------------------------------
+Enter the values in the configuration menu:
+  - Bot Token: The token from @BotFather
+  - Chat ID: Your user/group/channel ID
+
+TESTING:
+--------
+Use the "Test" option to verify your configuration works.
+
+TROUBLESHOOTING:
+----------------
+- "Unauthorized": Check your bot token is correct
+- "Chat not found": Make sure you've started a conversation with the bot
+- For groups: Ensure the bot is a member of the group
+- For channels: Ensure the bot is an admin
+
+================================================================================
+HELP_EOF
+}

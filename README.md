@@ -757,6 +757,12 @@ Este proyecto esta bajo licencia libre. Sientete libre de usar, modificar y dist
 - **Funcion validate_notifier_file()** - Validacion especifica para plugins que permite comandos pero bloquea patrones peligrosos
 - **Variables seguras con declare -n** - Usa nameref en lugar de eval para manipulacion de variables en el menu
 - **Limpieza segura con find** - Usa find con delimitadores seguros en lugar de ls | xargs rm
+- **Reemplazo de eval por bash -c** - safe_run() ahora usa bash -c en lugar de eval para evitar command injection
+- **Validacion de /etc/os-release** - Se valida el archivo antes de hacer source para prevenir code execution
+- **Proteccion anti-symlink** - validate_source_file() y validate_notifier_file() verifican que los archivos no sean symlinks maliciosos
+- **Flock atomico** - check_lock() usa flock para evitar race conditions TOCTOU
+- **Validacion de webhook** - El notificador webhook valida formato de URL, metodo HTTP y headers de autenticacion
+- **Umask seguro** - Los archivos de configuracion se crean con umask 077 para evitar exposicion temporal de credenciales
 
 ### Correcciones
 - **Fix Norton Commander theme** - Corregido overflow de fondo azul fuera de los margenes

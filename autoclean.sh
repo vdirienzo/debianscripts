@@ -346,6 +346,9 @@ update_language_arrays() {
 
 save_config() {
     # Guardar estado actual de los pasos y preferencias en archivo de configuración
+    # SECURITY: Crear archivo con permisos restrictivos desde el inicio (evita race condition)
+    local old_umask=$(umask)
+    umask 077
     cat > "$CONFIG_FILE" << EOF
 # Configuración de autoclean - Generado automáticamente
 # Fecha: $(date '+%Y-%m-%d %H:%M:%S')
@@ -425,13 +428,15 @@ NOTIF_HEADER
 
     local result=$?
 
+    # SECURITY: Restaurar umask original
+    umask "$old_umask"
+
     # Cambiar ownership al usuario que ejecutó sudo (no root)
     if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
         chown "$SUDO_USER:$SUDO_USER" "$CONFIG_FILE" 2>/dev/null
     fi
 
-    # Proteger archivo de configuración (contiene credenciales sensibles)
-    chmod 600 "$CONFIG_FILE" 2>/dev/null
+    # Nota: chmod 600 ya no es necesario, umask 077 crea el archivo con permisos correctos
 
     return $result
 }
@@ -445,18 +450,29 @@ validate_source_file() {
     # Verificar que el archivo existe y es legible
     [[ ! -f "$file" || ! -r "$file" ]] && return 1
 
+    # SECURITY: Verificar que no es un symlink apuntando fuera del directorio esperado
+    local real_path
+    real_path=$(realpath "$file" 2>/dev/null)
+    local expected_dir
+    expected_dir=$(dirname "$file")
+    expected_dir=$(realpath "$expected_dir" 2>/dev/null)
+    if [[ "$real_path" != "$expected_dir"/* ]]; then
+        log "WARN" "Archivo $file_type rechazado: symlink fuera del directorio permitido"
+        return 1
+    fi
+
     # Patrones peligrosos a rechazar (podrían ejecutar código arbitrario)
     # Se buscan en contenido no comentado
     local content
     content=$(grep -v '^\s*#' "$file" 2>/dev/null)
 
-    # Buscar patrones peligrosos:
+    # SECURITY: Buscar patrones peligrosos con regex más estricto:
     # - $( o ` = command substitution
-    # - ; seguido de comando = ejecución secuencial
+    # - ; seguido de cualquier caracter (no solo espacio+letra) = ejecución secuencial
     # - | = pipe a otro comando
-    # - && o || = operadores lógicos
-    # Nota: < y > dentro de strings son seguros (ej: "valor < otro")
-    if echo "$content" | grep -qE '\$\(|`|;\s*[a-zA-Z]|\s\|\s|\s&&\s|\s\|\|\s' 2>/dev/null; then
+    # - && o || = operadores lógicos (con o sin espacios)
+    # - ${ con comandos = parameter expansion peligrosa
+    if echo "$content" | grep -qE '\$\(|`|;.|[^a-zA-Z0-9_]\|[^a-zA-Z0-9_]|&&|\|\||\$\{[^}]*(:|/|%|#)' 2>/dev/null; then
         log "WARN" "Archivo $file_type rechazado: contiene sintaxis no permitida"
         return 1
     fi
@@ -472,20 +488,34 @@ validate_notifier_file() {
     # Verificar que el archivo existe y es legible
     [[ ! -f "$file" || ! -r "$file" ]] && return 1
 
+    # SECURITY: Verificar que no es un symlink apuntando fuera del directorio de notifiers
+    local real_path
+    real_path=$(realpath "$file" 2>/dev/null)
+    local expected_dir
+    expected_dir=$(realpath "$NOTIFIER_DIR" 2>/dev/null)
+    if [[ "$real_path" != "$expected_dir"/* ]]; then
+        log "WARN" "Archivo notifier rechazado: symlink fuera del directorio permitido"
+        return 1
+    fi
+
     local content
     content=$(grep -v '^\s*#' "$file" 2>/dev/null)
 
-    # Patrones realmente peligrosos a bloquear:
-    # - eval = ejecución de código arbitrario
+    # SECURITY: Patrones peligrosos a bloquear (regex reforzado):
+    # - eval con cualquier separador (no solo espacio)
     # - source/. de URLs o variables = cargar código externo
+    # - curl/wget con -o/-O = descarga a archivo
     # - curl/wget piped to bash/sh = ejecución remota
     # - rm -rf / = destrucción del sistema
     # - dd if= = escritura directa a disco
     # - mkfs = formateo de discos
     # - chmod 777 = permisos inseguros
-    local dangerous_patterns='eval\s|source\s+["\x27]?(https?://|\$)|^\s*\.\s+["\x27]?(https?://|\$)'
+    # - exec = reemplazo del proceso
+    local dangerous_patterns='eval[^a-zA-Z]|exec[^a-zA-Z]'
+    dangerous_patterns+='|source\s+["\x27]?(https?://|\$)|^\s*\.\s+["\x27]?(https?://|\$)'
+    dangerous_patterns+='|curl.*-[oO]\s|wget.*-[oO]\s'
     dangerous_patterns+='|curl.*\|\s*(ba)?sh|wget.*\|\s*(ba)?sh'
-    dangerous_patterns+='|rm\s+-rf\s+/[^a-zA-Z]|dd\s+if=|mkfs\.|chmod\s+777'
+    dangerous_patterns+='|rm\s+-[rf]*\s+/[^a-zA-Z]|dd\s+if=|mkfs\.|chmod\s+777'
 
     if echo "$content" | grep -qE "$dangerous_patterns" 2>/dev/null; then
         log "WARN" "Archivo notifier rechazado: contiene patrones peligrosos"
@@ -541,6 +571,9 @@ generate_default_config() {
     # Esta funcion se llama automaticamente si el archivo no existe
     log "INFO" "${MSG_CONFIG_GENERATING:-Generating default configuration file...}"
 
+    # SECURITY: Crear archivo con permisos restrictivos desde el inicio
+    local old_umask=$(umask)
+    umask 077
     cat > "$CONFIG_FILE" << EOF
 # Configuracion de autoclean - Generado automaticamente
 # Fecha: $(date '+%Y-%m-%d %H:%M:%S')
@@ -586,6 +619,9 @@ STEP_CHECK_REBOOT=1
 EOF
 
     local result=$?
+
+    # SECURITY: Restaurar umask original
+    umask "$old_umask"
 
     # Cambiar ownership al usuario que ejecuto sudo (no root)
     if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
@@ -2000,14 +2036,17 @@ safe_run() {
     local err_msg="$2"
 
     log "INFO" "${MSG_EXECUTING}: $cmd"
-    
-    if [ "$DRY_RUN" = true ]; then 
+
+    if [ "$DRY_RUN" = true ]; then
         log "INFO" "[DRY-RUN] $cmd"
         echo -e "${YELLOW}[DRY-RUN]${NC} $cmd"
         return 0
     fi
-    
-    if eval "$cmd" >> "$LOG_FILE" 2>&1; then
+
+    # SECURITY: Usar bash -c en lugar de eval para evitar expansión doble
+    # Nota: safe_run solo debe usarse con comandos construidos internamente,
+    # NUNCA con input de usuario sin sanitizar
+    if bash -c "$cmd" >> "$LOG_FILE" 2>&1; then
         return 0
     else
         log "ERROR" "$err_msg"
@@ -2036,6 +2075,8 @@ print_header() {
 }
 
 cleanup() {
+    # SECURITY: Cerrar el file descriptor del flock y eliminar lock file
+    exec 200>&- 2>/dev/null  # Cerrar fd 200 (libera el flock automáticamente)
     rm -f "$LOCK_FILE" 2>/dev/null
     log "INFO" "Lock file removed"
 }
@@ -2050,6 +2091,12 @@ detect_distro() {
     # Detectar distribución usando /etc/os-release
     if [ ! -f /etc/os-release ]; then
         die "${MSG_DISTRO_NOT_DETECTED}"
+    fi
+
+    # SECURITY: Validar /etc/os-release antes de hacer source
+    # Solo permitir asignaciones de variables simples (VAR=value o VAR="value")
+    if grep -qE '(\$\(|`|\||;|&&|\|\|)' /etc/os-release 2>/dev/null; then
+        die "ERROR: /etc/os-release contains unsafe content"
     fi
 
     # Cargar variables de os-release
@@ -2135,20 +2182,22 @@ check_root() {
 }
 
 check_lock() {
-    if [ -f "$LOCK_FILE" ]; then
-        local pid=$(cat "$LOCK_FILE" 2>/dev/null)
-        if kill -0 "$pid" 2>/dev/null; then
-            echo -e "${RED}[XX] Ya hay una instancia del script corriendo (PID: $pid)${NC}"
-            exit 1
-        fi
-        rm -f "$LOCK_FILE"
+    # SECURITY: Usar flock para bloqueo atómico (evita race conditions TOCTOU)
+    # El file descriptor 200 se mantiene abierto durante toda la ejecución
+    exec 200>"$LOCK_FILE"
+    if ! flock -n 200; then
+        # No pudimos obtener el lock, verificar quién lo tiene
+        local pid
+        pid=$(cat "$LOCK_FILE" 2>/dev/null)
+        echo -e "${RED}[XX] Ya hay una instancia del script corriendo (PID: ${pid:-desconocido})${NC}"
+        exit 1
     fi
-    echo $$ > "$LOCK_FILE"
-    
+    # Escribir nuestro PID al archivo (para información, el lock real es flock)
+    echo $$ >&200
+
     # Verificación extra de locks de APT
     if fuser /var/lib/dpkg/lock* /var/lib/apt/lists/lock* 2>/dev/null | grep -q .; then
         echo -e "${RED}[XX] APT esta ocupado. Cierra Synaptic/Discover e intenta de nuevo.${NC}"
-        rm -f "$LOCK_FILE"
         exit 1
     fi
 }

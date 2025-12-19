@@ -341,7 +341,9 @@ El script muestra un resumen detallado al finalizar con el estado de cada paso:
 
 ![Resumen de Ejecucion 3](screenshots/resumen-ejecucion-3.png)
 
-![Resumen de Ejecucion 4](screenshots/resumen-ejecucion-4.png)
+![Resumen de Ejecucion 4](screenshots/resumen-ejecucion-5.png)
+
+![Resumen de Ejecucion 5](screenshots/resumen-ejecucion-4.png)
 
 ---
 

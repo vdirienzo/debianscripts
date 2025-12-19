@@ -249,6 +249,7 @@ TOTAL_STEPS=0
 
 # Flags de control
 DRY_RUN=false
+NOTIFY_ON_DRY_RUN=false
 UNATTENDED=false
 QUIET=false
 REBOOT_NEEDED=false
@@ -1234,8 +1235,15 @@ send_notification() {
     local message="$2"
     local severity="${3:-info}"
 
-    # No enviar si estamos en dry-run
-    [ "$DRY_RUN" = true ] && return 0
+    # No enviar si estamos en dry-run (a menos que --notify este activo)
+    if [ "$DRY_RUN" = true ] && [ "$NOTIFY_ON_DRY_RUN" != true ]; then
+        return 0
+    fi
+
+    # Agregar prefijo [DRY-RUN] si estamos en modo simulacion
+    if [ "$DRY_RUN" = true ]; then
+        title="[DRY-RUN] $title"
+    fi
 
     local any_sent=0
 
@@ -3538,6 +3546,10 @@ while [[ $# -gt 0 ]]; do
             DRY_RUN=true
             shift
             ;;
+        -n|--notify)
+            NOTIFY_ON_DRY_RUN=true
+            shift
+            ;;
         -y|--unattended)
             UNATTENDED=true
             shift
@@ -3604,6 +3616,7 @@ Uso: sudo ./autoclean.sh [opciones]
 
 Opciones:
   --dry-run              Simular ejecución sin hacer cambios reales
+  -n, --notify           Enviar notificaciones en modo dry-run
   -y, --unattended       Modo desatendido sin confirmaciones
   --no-backup            No crear backup de configuraciones
   --no-menu              Omitir menú interactivo (usar config por defecto)
@@ -3628,6 +3641,7 @@ Ejemplos:
   sudo ./autoclean.sh --profile desktop  # Perfil escritorio
   sudo ./autoclean.sh --profile custom   # Perfil custom (lee autoclean.conf)
   sudo ./autoclean.sh --dry-run          # Simular cambios
+  sudo ./autoclean.sh --dry-run --notify # Simular y enviar notificaciones
   sudo ./autoclean.sh -y                 # Modo desatendido
   sudo ./autoclean.sh --schedule weekly  # Programar semanal
 

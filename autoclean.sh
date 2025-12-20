@@ -4461,7 +4461,8 @@ show_final_summary() {
     print_box_top
     print_box_center "${BOLD}${MENU_SUMMARY_TITLE}${BOX_NC}"
     print_box_sep
-    print_box_line "${MSG_SUMMARY_STATUS}: ${overall_color}${overall_icon} ${overall_status}${BOX_NC}                          ${MSG_SUMMARY_DURATION}: ${CYAN}${duration_str}${BOX_NC}"
+    print_box_line "${MSG_SUMMARY_STATUS}: ${overall_color}${overall_icon} ${overall_status}${BOX_NC}"
+    print_box_line "${MSG_SUMMARY_DURATION}: ${CYAN}${duration_str}${BOX_NC}"
     print_box_sep
     print_box_line "${BOLD}${MSG_SUMMARY_METRICS}${BOX_NC}"
     print_box_line "${MSG_SUMMARY_COMPLETED_COUNT}: ${GREEN}${success_count}${BOX_NC}    ${MSG_SUMMARY_ERRORS}: ${RED}${error_count}${BOX_NC}    ${MSG_SUMMARY_SKIPPED}: ${YELLOW}${skipped_count}${BOX_NC}    ${MSG_SUMMARY_SPACE}: ${CYAN}${total_freed} MB${BOX_NC}"

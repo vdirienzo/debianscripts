@@ -4520,7 +4520,8 @@ show_final_summary() {
             log "INFO" "User requested immediate reboot"
             echo "${MSG_REBOOTING_IN}"
             sleep 5
-            reboot
+            # Use -i flag to ignore inhibitors (active sessions, etc.)
+            systemctl reboot -i
         fi
     fi
 }

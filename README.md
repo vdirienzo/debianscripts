@@ -87,7 +87,7 @@ Detection is performed automatically using `/etc/os-release` and the script adap
 
 ### Color Themes
 
-- **9 themes included**: Wide variety of visual styles
+- **16 themes included**: Wide variety of visual styles
 - **Dynamic detection**: Themes are automatically detected from the `plugins/themes/` folder
 - **4-column grid selector**: Press `[T]` in menu, navigate with arrow keys
 - **Create your own theme**: Tutorial included in `plugins/themes/TUTORIAL.md`
@@ -115,13 +115,20 @@ Detection is performed automatically using `/etc/os-release` and the script adap
 |-------|-------------|------------|
 | Default | Blue/Cyan/Green - original theme | - |
 | Norton Commander | Cyan/Yellow - classic NC style | Blue |
-| Bloody Red | Intense red tones | - |
+| Turbo Pascal | Classic Borland IDE style | Blue |
 | Green Terminal | Retro monochrome green | - |
 | Amber Terminal | Vintage amber monochrome | - |
 | Dracula | Purple/Pink/Cyan - popular theme | - |
 | Matrix | Bright neon green movie style | Black |
 | Synthwave | Neon pink/cyan retro 80s | Purple |
 | Monokai | Orange/Lime green - Sublime classic | - |
+| Ocean | Green/Yellow accents - NC inspired | Blue |
+| Aurora Borealis | Cyan/Green/Yellow glow - northern lights | Black |
+| Tropical | Yellow/White/Blue - jungle vibes | Green |
+| Firefly | Yellow/Green glow - summer night | Black |
+| Lagoon | Blue/Yellow/Green - tropical water | Cyan |
+| Brasil | Yellow/Blue - Brazilian flag colors | Green |
+| Midnight | Cyan cool/Yellow warm - urban night | Blue |
 
 ### Detection and Compatibility
 - **Automatic distribution detection**: Identifies Debian, Ubuntu, Mint, Pop!_OS, Elementary, Zorin, Kali and derivatives
@@ -772,7 +779,7 @@ See the [LICENSE](LICENSE) file for details.
 - **Lines of code:** ~4600+
 - **Modular steps:** 23
 - **Languages supported:** 6 (en, es, pt, fr, de, it) - dynamic detection
-- **Color themes:** 9 (Default, Norton, Turbo, Green, Amber, Dracula, Matrix, Synthwave, Monokai) - dynamic detection
+- **Color themes:** 16 (Default, Norton, Turbo, Green, Amber, Dracula, Matrix, Synthwave, Monokai, Ocean, Aurora, Tropical, Firefly, Lagoon, Brasil, Midnight) - dynamic detection
 - **Notifiers:** 5 (Desktop, Telegram, ntfy.sh, Webhook, Email) - extensible plugin architecture
 - **Supported distributions:** 7+ (auto-detection)
 - **Compatible with:** Debian, Ubuntu, Mint, Pop!_OS, Elementary, Zorin, Kali and derivatives

@@ -1,0 +1,34 @@
+# Autoclean Theme: Aurora Borealis
+# Black background with glowing greens, blues and yellows like northern lights
+
+THEME_NAME="Aurora Borealis"
+THEME_CODE="aurora"
+
+# Base colors (all with black background - like night sky)
+T_RED='\033[1;31;40m'
+T_GREEN='\033[1;32;40m'
+T_YELLOW='\033[1;33;40m'
+T_BLUE='\033[1;34;40m'
+T_CYAN='\033[1;36;40m'
+T_MAGENTA='\033[1;35;40m'
+T_BRIGHT_GREEN='\033[1;32;40m'
+T_BRIGHT_YELLOW='\033[1;33;40m'
+T_BRIGHT_CYAN='\033[1;36;40m'
+T_DIM='\033[2;37;40m'
+
+# Box background
+T_BOX_BG='\033[40m'                # Black background (night sky)
+T_BOX_NC='\033[0m\033[40m'         # Reset + black background
+
+# Semantic colors - Aurora palette (shifting colors)
+T_BOX_BORDER='\033[1;36;40m'       # Cyan glow (aurora edge)
+T_BOX_TITLE='\033[1;32;40m'        # Green glow (aurora peak)
+T_TEXT_NORMAL='\033[1;34;40m'      # Blue (night sky reflection)
+T_TEXT_SELECTED='\033[1;33;40m'    # Yellow flash (aurora burst)
+T_TEXT_ACTIVE='\033[1;32;40m'      # Green glow (active aurora)
+T_TEXT_INACTIVE='\033[0;34;40m'    # Dim blue (distant stars)
+T_STATUS_OK='\033[1;32;40m'        # Green aurora
+T_STATUS_ERROR='\033[1;31;40m'     # Red (rare aurora)
+T_STATUS_WARN='\033[1;33;40m'      # Yellow burst
+T_STATUS_INFO='\033[1;36;40m'      # Cyan shimmer
+T_STEP_HEADER='\033[1;32;40m'      # Green aurora header

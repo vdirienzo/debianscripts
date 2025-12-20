@@ -1,0 +1,34 @@
+# Autoclean Theme: Lagoon
+# Cyan background with deep blues, greens and sandy yellows
+
+THEME_NAME="Lagoon"
+THEME_CODE="lagoon"
+
+# Base colors (cyan background - clear tropical water)
+T_RED='\033[1;31;46m'
+T_GREEN='\033[1;32;46m'
+T_YELLOW='\033[1;33;46m'
+T_BLUE='\033[1;34;46m'
+T_CYAN='\033[1;37;46m'
+T_MAGENTA='\033[1;35;46m'
+T_BRIGHT_GREEN='\033[1;32;46m'
+T_BRIGHT_YELLOW='\033[1;33;46m'
+T_BRIGHT_CYAN='\033[1;37;46m'
+T_DIM='\033[0;30;46m'
+
+# Box background
+T_BOX_BG='\033[46m'                # Cyan water
+T_BOX_NC='\033[0m\033[46m'         # Reset + cyan
+
+# Semantic colors - Lagoon palette
+T_BOX_BORDER='\033[1;34;46m'       # Deep blue (deep water)
+T_BOX_TITLE='\033[1;33;46m'        # Yellow (sandy beach)
+T_TEXT_NORMAL='\033[1;30;46m'      # Dark (underwater shadow)
+T_TEXT_SELECTED='\033[1;33;46m'    # Yellow (sun reflection)
+T_TEXT_ACTIVE='\033[1;32;46m'      # Green (seaweed/coral)
+T_TEXT_INACTIVE='\033[0;34;46m'    # Dim blue (deep water)
+T_STATUS_OK='\033[1;32;46m'        # Green coral
+T_STATUS_ERROR='\033[1;31;46m'     # Red coral
+T_STATUS_WARN='\033[1;33;46m'      # Yellow sand
+T_STATUS_INFO='\033[1;34;46m'      # Blue depths
+T_STEP_HEADER='\033[1;33;46m'      # Sandy yellow

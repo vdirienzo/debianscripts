@@ -1,0 +1,34 @@
+# Autoclean Theme: Midnight
+# Deep blue background with cool cyan, green accents and warm yellow highlights
+
+THEME_NAME="Midnight"
+THEME_CODE="midnight"
+
+# Base colors (blue background - deep night)
+T_RED='\033[1;31;44m'
+T_GREEN='\033[0;32;44m'
+T_YELLOW='\033[1;33;44m'
+T_BLUE='\033[1;37;44m'
+T_CYAN='\033[0;36;44m'
+T_MAGENTA='\033[0;35;44m'
+T_BRIGHT_GREEN='\033[1;32;44m'
+T_BRIGHT_YELLOW='\033[1;33;44m'
+T_BRIGHT_CYAN='\033[1;36;44m'
+T_DIM='\033[2;37;44m'
+
+# Box background
+T_BOX_BG='\033[44m'                # Deep blue night
+T_BOX_NC='\033[0m\033[44m'         # Reset + blue
+
+# Semantic colors - Midnight palette (cool with warm accents)
+T_BOX_BORDER='\033[0;36;44m'       # Cool cyan (moonlight edge)
+T_BOX_TITLE='\033[1;33;44m'        # Warm yellow (lamp light)
+T_TEXT_NORMAL='\033[0;37;44m'      # Soft white (moonlit)
+T_TEXT_SELECTED='\033[1;33;44m'    # Yellow (streetlight)
+T_TEXT_ACTIVE='\033[1;32;44m'      # Green (night vision)
+T_TEXT_INACTIVE='\033[2;36;44m'    # Dim cyan (shadow)
+T_STATUS_OK='\033[0;32;44m'        # Calm green
+T_STATUS_ERROR='\033[1;31;44m'     # Alert red
+T_STATUS_WARN='\033[1;33;44m'      # Warm yellow
+T_STATUS_INFO='\033[0;36;44m'      # Cool cyan
+T_STEP_HEADER='\033[0;36;44m'      # Cyan moonlight

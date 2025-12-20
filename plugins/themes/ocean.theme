@@ -1,0 +1,34 @@
+# Autoclean Theme: Ocean
+# Blue background with green and yellow accents (Norton Commander inspired)
+
+THEME_NAME="Ocean"
+THEME_CODE="ocean"
+
+# Base colors (all with blue background)
+T_RED='\033[1;31;44m'
+T_GREEN='\033[1;32;44m'
+T_YELLOW='\033[1;33;44m'
+T_BLUE='\033[1;34;44m'
+T_CYAN='\033[1;36;44m'
+T_MAGENTA='\033[1;35;44m'
+T_BRIGHT_GREEN='\033[1;32;44m'
+T_BRIGHT_YELLOW='\033[1;33;44m'
+T_BRIGHT_CYAN='\033[1;36;44m'
+T_DIM='\033[0;37;44m'
+
+# Box background (for themes with colored background)
+T_BOX_BG='\033[44m'                # Blue background for filling spaces
+T_BOX_NC='\033[0m\033[44m'         # Reset + blue background (for use inside boxes)
+
+# Semantic colors - Ocean palette
+T_BOX_BORDER='\033[1;32;44m'       # Bright green + blue bg (borders)
+T_BOX_TITLE='\033[1;33;44m'        # Bright yellow + blue bg (titles)
+T_TEXT_NORMAL='\033[1;36;44m'      # Bright cyan + blue bg (normal text)
+T_TEXT_SELECTED='\033[1;33;44m'    # Bright yellow + blue bg (cursor >)
+T_TEXT_ACTIVE='\033[1;32;44m'      # Bright green + blue bg ([x] active items)
+T_TEXT_INACTIVE='\033[0;36;44m'    # Dim cyan + blue bg ([ ] inactive items)
+T_STATUS_OK='\033[1;32;44m'        # Bright green + blue bg (success)
+T_STATUS_ERROR='\033[1;31;44m'     # Bright red + blue bg (error)
+T_STATUS_WARN='\033[1;33;44m'      # Yellow + blue bg (warning)
+T_STATUS_INFO='\033[1;36;44m'      # Bright cyan + blue bg (info)
+T_STEP_HEADER='\033[1;33;44m'      # Yellow + blue bg (step headers)

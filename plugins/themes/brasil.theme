@@ -1,0 +1,34 @@
+# Autoclean Theme: Brasil
+# Green background with yellow and blue - Brazilian flag colors
+
+THEME_NAME="Brasil"
+THEME_CODE="brasil"
+
+# Base colors (green background - Brazilian flag base)
+T_RED='\033[1;31;42m'
+T_GREEN='\033[1;33;42m'
+T_YELLOW='\033[1;33;42m'
+T_BLUE='\033[1;34;42m'
+T_CYAN='\033[1;36;42m'
+T_MAGENTA='\033[1;35;42m'
+T_BRIGHT_GREEN='\033[1;33;42m'
+T_BRIGHT_YELLOW='\033[1;33;42m'
+T_BRIGHT_CYAN='\033[1;34;42m'
+T_DIM='\033[0;30;42m'
+
+# Box background
+T_BOX_BG='\033[42m'                # Green (bandeira)
+T_BOX_NC='\033[0m\033[42m'         # Reset + green
+
+# Semantic colors - Brasil palette
+T_BOX_BORDER='\033[1;33;42m'       # Yellow diamond
+T_BOX_TITLE='\033[1;34;42m'        # Blue (globe)
+T_TEXT_NORMAL='\033[1;33;42m'      # Yellow (ordem e progresso)
+T_TEXT_SELECTED='\033[1;37;44m'    # White on blue (stars)
+T_TEXT_ACTIVE='\033[1;33;42m'      # Yellow active
+T_TEXT_INACTIVE='\033[0;30;42m'    # Dark inactive
+T_STATUS_OK='\033[1;34;42m'        # Blue success
+T_STATUS_ERROR='\033[1;31;42m'     # Red error
+T_STATUS_WARN='\033[1;33;42m'      # Yellow warning
+T_STATUS_INFO='\033[1;34;42m'      # Blue info
+T_STEP_HEADER='\033[1;33;42m'      # Yellow header

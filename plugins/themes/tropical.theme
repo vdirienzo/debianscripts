@@ -1,0 +1,34 @@
+# Autoclean Theme: Tropical
+# Green background with yellow sun and blue water vibes
+
+THEME_NAME="Tropical"
+THEME_CODE="tropical"
+
+# Base colors (all with green background - jungle canopy)
+T_RED='\033[1;31;42m'
+T_GREEN='\033[1;37;42m'
+T_YELLOW='\033[1;33;42m'
+T_BLUE='\033[1;34;42m'
+T_CYAN='\033[1;36;42m'
+T_MAGENTA='\033[1;35;42m'
+T_BRIGHT_GREEN='\033[1;37;42m'
+T_BRIGHT_YELLOW='\033[1;33;42m'
+T_BRIGHT_CYAN='\033[1;36;42m'
+T_DIM='\033[0;30;42m'
+
+# Box background
+T_BOX_BG='\033[42m'                # Green background (jungle)
+T_BOX_NC='\033[0m\033[42m'         # Reset + green background
+
+# Semantic colors - Tropical palette
+T_BOX_BORDER='\033[1;33;42m'       # Yellow (sun rays through leaves)
+T_BOX_TITLE='\033[1;37;42m'        # White (bright sunlight)
+T_TEXT_NORMAL='\033[1;30;42m'      # Dark text on green (shadow)
+T_TEXT_SELECTED='\033[1;33;42m'    # Yellow (sun spot)
+T_TEXT_ACTIVE='\033[1;34;42m'      # Blue (tropical water)
+T_TEXT_INACTIVE='\033[0;30;42m'    # Dark green shadow
+T_STATUS_OK='\033[1;34;42m'        # Blue lagoon
+T_STATUS_ERROR='\033[1;31;42m'     # Red flower
+T_STATUS_WARN='\033[1;33;42m'      # Yellow sun
+T_STATUS_INFO='\033[1;36;42m'      # Cyan water
+T_STEP_HEADER='\033[1;33;42m'      # Yellow sunbeam

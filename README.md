@@ -1,5 +1,12 @@
 # Debian Scripts Collection
 
+[![GitHub stars](https://img.shields.io/github/stars/vdirienzo/DebianScripts)](https://github.com/vdirienzo/DebianScripts/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/vdirienzo/DebianScripts)](https://github.com/vdirienzo/DebianScripts/network)
+[![GitHub issues](https://img.shields.io/github/issues/vdirienzo/DebianScripts)](https://github.com/vdirienzo/DebianScripts/issues)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)](https://www.gnu.org/software/bash/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/vdirienzo/DebianScripts/graphs/commit-activity)
+
 Collection of maintenance and update scripts for Debian/Ubuntu based distributions.
 
 ## Table of Contents

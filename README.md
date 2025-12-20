@@ -341,9 +341,15 @@ The script shows a detailed summary upon completion with the status of each step
 
 ![Execution Summary 3](screenshots/resumen-ejecucion-3.png)
 
-![Execution Summary 4](screenshots/resumen-ejecucion-5.png)
+![Execution Summary 4](screenshots/resumen-ejecucion-4.png)
 
-![Execution Summary 5](screenshots/resumen-ejecucion-4.png)
+![Execution Summary 5](screenshots/resumen-ejecucion-5.png)
+
+![Execution Summary 6](screenshots/resumen-ejecucion-6.png)
+
+![Execution Summary 7](screenshots/resumen-ejecucion-7.png)
+
+![Execution Summary 8](screenshots/resumen-ejecucion-8.png)
 
 ---
 

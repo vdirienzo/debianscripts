@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/vdirienzo/DebianScripts)](https://github.com/vdirienzo/DebianScripts/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/vdirienzo/DebianScripts)](https://github.com/vdirienzo/DebianScripts/network)
 [![GitHub issues](https://img.shields.io/github/issues/vdirienzo/DebianScripts)](https://github.com/vdirienzo/DebianScripts/issues)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)](https://www.gnu.org/software/bash/)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/vdirienzo/DebianScripts/graphs/commit-activity)
 
@@ -743,19 +743,18 @@ Contributions are welcome. Please:
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+This project is licensed under the **MIT License**.
 
 You are free to:
 - Use, copy, and distribute the software
 - Modify the source code
+- Use for commercial purposes
 - Distribute modified versions
 
-Under the following conditions:
-- Source code must remain open
-- Modifications must be licensed under GPL-3.0
-- Include copyright notice and license
+Only requirement:
+- Include the original copyright notice and license
 
-See the [LICENSE](LICENSE) file or visit [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) for details.
+See the [LICENSE](LICENSE) file for details.
 
 ---
 

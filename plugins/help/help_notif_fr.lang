@@ -1,0 +1,144 @@
+# ============================================================================
+# Contenu d'aide des notificateurs pour autoclean.sh - Francais
+# ============================================================================
+# Format: HELP_NOTIF_<CODE> ou CODE est le code du notificateur (majuscules)
+
+HELP_NOTIF_DESKTOP="Notifications Bureau (notify-send)
+
+CE QUE CA FAIT:
+Affiche les notifications systeme sur votre environnement de bureau.
+
+PREREQUIS:
+- notify-send (paquet libnotify-bin)
+- Serveur d'affichage actif (X11 ou Wayland)
+- Daemon de notifications (inclus dans la plupart des bureaux)
+
+INSTALLATION:
+  sudo apt install libnotify-bin
+
+COMMENT CA MARCHE:
+- Detecte automatiquement votre session d'affichage
+- Fonctionne correctement avec sudo
+- Envoie vers la zone de notifications du bureau
+
+NOTES:
+- Fonctionne uniquement depuis les sessions graphiques
+- Ne fonctionne pas en SSH ou consoles TTY
+
+AUCUNE CONFIGURATION NECESSAIRE - activez et ca marche!"
+
+HELP_NOTIF_TELEGRAM="Notifications Bot Telegram
+
+CE QUE CA FAIT:
+Envoie des notifications via l'API Telegram Bot aux utilisateurs, groupes ou canaux.
+
+ETAPES DE CONFIGURATION:
+
+1. CREER UN BOT:
+   - Ouvrez Telegram, cherchez @BotFather
+   - Envoyez /newbot et suivez les instructions
+   - Copiez le token du bot (123456789:ABCdef...)
+
+2. OBTENIR VOTRE CHAT ID:
+   Personnel: Cherchez @userinfobot, il affiche votre ID
+   Groupe: Ajoutez le bot au groupe, verifiez l'API getUpdates
+   Canal: Ajoutez le bot comme admin, utilisez @nomducanal
+
+3. CONFIGURER:
+   Entrez le Token du Bot et le Chat ID dans le menu config
+
+TEST:
+Utilisez l'option Test pour verifier la configuration.
+
+DEPANNAGE:
+- Unauthorized: Verifiez le token du bot
+- Chat not found: Demarrez d'abord une conversation avec le bot
+- Groupes: Le bot doit etre membre
+- Canaux: Le bot doit etre admin"
+
+HELP_NOTIF_EMAIL="Notifications Email (msmtp)
+
+CE QUE CA FAIT:
+Envoie des notifications par email en utilisant le client msmtp.
+
+PREREQUIS:
+- Paquets msmtp et msmtp-mta
+- Identifiants de compte email valides
+
+INSTALLATION:
+  sudo apt install msmtp msmtp-mta
+
+CONFIGURATION:
+1. Adresse email: Votre email expediteur
+2. Serveur SMTP: serveur mail (smtp.gmail.com)
+3. Port SMTP: Generalement 587 (TLS) ou 465 (SSL)
+4. Nom d'utilisateur: Votre identifiant email
+5. Mot de passe: Votre mot de passe ou mot de passe d'application
+
+UTILISATEURS GMAIL:
+- Activez 2FA dans votre compte Google
+- Generez un mot de passe d'application sur myaccount.google.com
+- Utilisez ce mot de passe au lieu du normal
+
+TEST:
+Configurez tous les champs, puis utilisez l'option Test."
+
+HELP_NOTIF_NTFY="Notifications Push ntfy.sh
+
+CE QUE CA FAIT:
+Envoie des notifications push via le service ntfy.sh aux telephones et bureaux.
+
+QU'EST-CE QUE NTFY:
+Service de notifications push gratuit et open-source.
+Pas de compte necessaire pour les topics publics.
+
+CONFIGURATION:
+1. Installez l'app ntfy sur votre telephone/bureau
+2. Abonnez-vous a un topic (n'importe quel nom unique)
+3. Entrez le meme nom de topic dans la config
+
+PARAMETRES:
+- Serveur: ntfy.sh (defaut) ou auto-heberge
+- Topic: Votre nom de topic unique
+- Token: Seulement si vous utilisez l'authentification
+
+CONSEILS:
+- Utilisez des noms de topic uniques pour eviter le spam
+- Auto-hebergez pour des notifications privees
+- Fonctionne sur Android, iOS et bureau
+
+TEST:
+Abonnez-vous d'abord au topic, puis utilisez l'option Test."
+
+HELP_NOTIF_WEBHOOK="Notifications Webhook
+
+CE QUE CA FAIT:
+Envoie des requetes HTTP POST vers des endpoints webhook personnalises.
+Supporte Discord, Slack, Teams et services personnalises.
+
+PRESETS DISPONIBLES:
+- Discord: URL webhook Discord
+- Slack: Webhook entrant Slack
+- Teams: Connecteur Microsoft Teams
+- Custom: N'importe quel endpoint HTTP
+
+CONFIGURATION:
+1. Selectionnez un preset ou utilisez custom
+2. Entrez l'URL du webhook
+3. Optionnellement personnalisez le template JSON
+
+VARIABLES DU TEMPLATE JSON:
+- {title}: Titre de la notification
+- {message}: Corps de la notification
+- {severity}: info/warning/error/success
+- {timestamp}: Horodatage ISO 8601
+- {hostname}: Nom d'hote systeme
+
+CONFIGURER DISCORD:
+Parametres serveur > Integrations > Webhooks > Nouveau
+
+CONFIGURER SLACK:
+Apps > Incoming Webhooks > Ajouter au canal
+
+TEST:
+Entrez l'URL webhook, puis utilisez l'option Test."

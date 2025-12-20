@@ -1,0 +1,321 @@
+# ============================================================================
+# Contenu d'aide pour autoclean.sh - Francais
+# ============================================================================
+# Format: HELP_STEP_N ou N est 1-23
+# Structure: Titre, CE QUE CA FAIT, COMMENT CA MARCHE, RECOMMANDE
+
+HELP_STEP_1="Verifier la connectivite
+
+CE QUE CA FAIT:
+Verifie la connexion internet avant les mises a jour et telechargements.
+
+COMMENT CA MARCHE:
+- Ping des serveurs fiables (8.8.8.8, 1.1.1.1, google.com)
+- Test de resolution DNS
+- Valide la configuration proxy si definie
+
+POURQUOI C'EST IMPORTANT:
+Sans connexion, les mises a jour echoueront.
+
+RECOMMANDE: Toujours active sauf travail hors-ligne."
+
+HELP_STEP_2="Verifier les dependances
+
+CE QUE CA FAIT:
+Installe les outils essentiels requis par autoclean.sh.
+
+OUTILS VERIFIES:
+- timeshift: Snapshots systeme pour restauration
+- needrestart: Detecte les services a redemarrer
+- debsums: Verification d'integrite des paquets
+- smartmontools: Surveillance sante des disques
+
+RECOMMANDE: Toujours active au premier lancement."
+
+HELP_STEP_3="Verifier les depots APT
+
+CE QUE CA FAIT:
+Analyse /etc/apt/sources.list pour les depots problematiques.
+
+COMMENT CA MARCHE:
+- Detecte les PPAs sur systemes non-Ubuntu
+- Trouve les entrees CDROM/DVD obsoletes
+- Identifie les sources en double
+- Avertit des depots HTTP non securises
+
+RECOMMANDE: Activer periodiquement pour garder les sources propres."
+
+HELP_STEP_4="Sante du disque (SMART)
+
+CE QUE CA FAIT:
+Verifie la sante des disques avec la technologie SMART.
+
+COMMENT CA MARCHE:
+- Lit les attributs SMART des disques
+- Detecte les signes precoces de defaillance
+- Rapporte temperature et secteurs realloues
+- Avertit des disques a risque
+
+RECOMMANDE: Activer si vous avez des HDDs ou SSDs avec support SMART."
+
+HELP_STEP_5="Integrite des paquets (debsums)
+
+CE QUE CA FAIT:
+Verifie que les paquets installes n'ont pas ete modifies ou corrompus.
+
+COMMENT CA MARCHE:
+- Compare les fichiers installes aux sommes de controle
+- Detecte les modifications non autorisees
+- Identifie les fichiers corrompus
+- Rapporte les fichiers manquants
+
+RECOMMANDE: Activer periodiquement pour l'audit de securite."
+
+HELP_STEP_6="Verification de securite
+
+CE QUE CA FAIT:
+Audite la configuration de securite du systeme.
+
+VERIFICATIONS EFFECTUEES:
+- Statut du pare-feu UFW et regles
+- Configuration SSH (login root, auth par mot de passe)
+- Configuration unattended-upgrades
+- Statut fail2ban et jails actifs
+
+RECOMMANDE: Activer regulierement pour la conformite securite."
+
+HELP_STEP_7="Permissions critiques
+
+CE QUE CA FAIT:
+Audite les permissions sur les fichiers critiques de securite.
+
+FICHIERS VERIFIES:
+- /etc/passwd, /etc/shadow, /etc/sudoers
+- Fichiers de configuration SSH
+- Repertoires cron
+- Comptage des binaires SUID/SGID
+
+RECOMMANDE: Activer pour les audits de securite."
+
+HELP_STEP_8="Auditer les services
+
+CE QUE CA FAIT:
+Analyse les services systemd actifs et detecte les unites en echec.
+
+COMMENT CA MARCHE:
+- Liste tous les services actifs
+- Detecte les unites systemd en echec
+- Identifie les services en etat degrade
+- Compte services actifs vs total
+
+RECOMMANDE: Activer pour maintenir la sante du systeme."
+
+HELP_STEP_9="Sauvegarder configurations (tar)
+
+CE QUE CA FAIT:
+Cree une sauvegarde compressee des sources APT et configs systeme.
+
+FICHIERS SAUVEGARDES:
+- /etc/apt/sources.list et sources.list.d/
+- /etc/apt/preferences.d/
+- Liste des paquets (dpkg --get-selections)
+
+EMPLACEMENT: /var/backups/autoclean/
+
+RECOMMANDE: Toujours activer avant mises a jour majeures."
+
+HELP_STEP_10="Snapshot Timeshift
+
+CE QUE CA FAIT:
+Cree un snapshot systeme avec Timeshift pour restauration facile.
+
+COMMENT CA MARCHE:
+- Utilise le mode RSYNC (defaut) ou snapshots BTRFS
+- Sauvegarde a l'emplacement configure
+- Incrementiel: seuls les fichiers modifies occupent de l'espace
+
+FILET DE SECURITE CRITIQUE. En cas de probleme, restauration en secondes.
+
+RECOMMANDE: TOUJOURS ACTIVER avant les mises a niveau systeme."
+
+HELP_STEP_11="Mettre a jour les depots
+
+CE QUE CA FAIT:
+Rafraichit la base de donnees des paquets depuis toutes les sources.
+
+COMMENT CA MARCHE:
+- Execute apt update
+- Telecharge les listes de paquets actuelles
+- Verifie les erreurs de depot
+- Rapporte le nombre de mises a jour disponibles
+
+RECOMMANDE: Toujours activer avant les mises a niveau."
+
+HELP_STEP_12="Mettre a jour le systeme (APT)
+
+CE QUE CA FAIT:
+Installe les mises a jour disponibles pour tous les paquets.
+
+COMMENT CA MARCHE:
+- Execute apt upgrade (mode securise)
+- Installe les correctifs de securite
+- Met a jour les paquets installes
+- Ne supprime jamais de paquets
+
+RECOMMANDE: Activer regulierement pour la securite."
+
+HELP_STEP_13="Mettre a jour Flatpak
+
+CE QUE CA FAIT:
+Met a jour toutes les applications Flatpak installees.
+
+COMMENT CA MARCHE:
+- Execute flatpak update
+- Met a jour les apps systeme et utilisateur
+- Telecharge les mises a jour delta si possible
+
+PASSER SI: Vous n'utilisez pas d'applications Flatpak.
+
+RECOMMANDE: Activer si vous avez des apps Flatpak."
+
+HELP_STEP_14="Mettre a jour Snap
+
+CE QUE CA FAIT:
+Met a jour tous les paquets Snap installes.
+
+COMMENT CA MARCHE:
+- Execute snap refresh
+- Telecharge et installe les nouvelles versions
+- Garde la version precedente pour rollback
+
+PASSER SI: Vous n'utilisez pas de paquets Snap.
+
+RECOMMANDE: Activer si vous avez des apps Snap."
+
+HELP_STEP_15="Verifier le firmware
+
+CE QUE CA FAIT:
+Cherche les mises a jour de firmware disponibles via fwupd.
+
+COMMENT CA MARCHE:
+- Interroge le service fwupd
+- Verifie LVFS pour les mises a jour
+- Liste les appareils avec mises a jour en attente
+
+NOTE: Necessite le service fwupd actif.
+
+RECOMMANDE: Activer periodiquement sur materiel supporte."
+
+HELP_STEP_16="Nettoyage APT
+
+CE QUE CA FAIT:
+Supprime les paquets orphelins et nettoie le cache APT.
+
+COMMENT CA MARCHE:
+- apt autoremove: Supprime les dependances inutilisees
+- apt autoclean: Supprime les fichiers de paquets obsoletes
+- dpkg --purge: Supprime les configs residuelles
+
+ESPACE: Libere typiquement 200Mo - 2Go.
+
+RECOMMANDE: Activer regulierement. Operation sure."
+
+HELP_STEP_17="Nettoyage des kernels
+
+CE QUE CA FAIT:
+Supprime les anciens kernels Linux, garde les plus recents.
+
+COMMENT CA MARCHE:
+- Garde le kernel en cours d'execution
+- Garde N kernels les plus recents (configurable, defaut: 3)
+- Supprime anciennes images, headers, modules
+
+ESPACE: Peut liberer 500Mo - 2Go par ancien kernel.
+
+RECOMMANDE: Activer pour liberer l'espace /boot."
+
+HELP_STEP_18="Nettoyage disque/logs
+
+CE QUE CA FAIT:
+Nettoie les fichiers temporaires, caches et anciens logs.
+
+EMPLACEMENTS NETTOYES:
+- /tmp et /var/tmp (anciens fichiers)
+- Caches de miniatures
+- Cache APT
+- Anciens logs archives
+- Journal systemd (garde 7 jours)
+
+RECOMMANDE: Activer pour recuperer de l'espace disque."
+
+HELP_STEP_19="Nettoyage Docker
+
+CE QUE CA FAIT:
+Supprime images, conteneurs et volumes Docker/Podman inutilises.
+
+COMMENT CA MARCHE:
+- Supprime les conteneurs arretes
+- Supprime les images orphelines
+- Nettoie les volumes inutilises
+- Nettoie le cache de build
+
+PASSER SI: Vous n'utilisez pas Docker/Podman.
+
+RECOMMANDE: Activer si vous utilisez des conteneurs."
+
+HELP_STEP_20="Sessions abandonnees
+
+CE QUE CA FAIT:
+Nettoie les sessions utilisateur expirees et fichiers temporaires.
+
+COMMENT CA MARCHE:
+- Supprime les fichiers de session expires
+- Nettoie les anciennes sessions utilisateur systemd
+- Supprime les fichiers de verrouillage obsoletes
+
+RECOMMANDE: Activer pour les systemes multi-utilisateurs."
+
+HELP_STEP_21="Verifier logrotate
+
+CE QUE CA FAIT:
+Valide la configuration logrotate pour les erreurs.
+
+COMMENT CA MARCHE:
+- Execute logrotate en mode debug
+- Verifie la syntaxe de tous les fichiers config
+- Rapporte les fichiers log mal configures
+
+POURQUOI C'EST IMPORTANT:
+Une mauvaise config logrotate peut remplir le disque.
+
+RECOMMANDE: Activer periodiquement."
+
+HELP_STEP_22="Verifier les inodes
+
+CE QUE CA FAIT:
+Surveille l'utilisation des inodes pour prevenir l'epuisement.
+
+COMMENT CA MARCHE:
+- Verifie le pourcentage d'utilisation des inodes par systeme de fichiers
+- Avertit si l'utilisation depasse le seuil
+- Identifie les repertoires avec beaucoup d'inodes
+
+POURQUOI C'EST IMPORTANT:
+Sans inodes, impossible de creer des fichiers meme avec espace libre.
+
+RECOMMANDE: Activer sur systemes avec beaucoup de petits fichiers."
+
+HELP_STEP_23="Verifier le redemarrage
+
+CE QUE CA FAIT:
+Determine si un redemarrage systeme est requis apres les mises a jour.
+
+COMMENT CA MARCHE:
+- Verifie /var/run/reboot-required
+- Utilise needrestart pour detecter les processus obsoletes
+- Liste les services necessitant un redemarrage
+
+POURQUOI C'EST IMPORTANT:
+Certaines mises a jour necessitent un redemarrage pour effet complet.
+
+RECOMMANDE: Toujours activer pour rester informe."

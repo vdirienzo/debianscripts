@@ -77,6 +77,15 @@ MENU_CTRL_DELETE="Loeschen"
 MENU_CTRL_LANG="Spr."
 MENU_CTRL_THEME="Thema"
 MENU_CTRL_QUIT="Beenden"
+MENU_CTRL_HELP="Hilfe"
+MENU_CTRL_ALL="Alle/Keine"
+MENU_CTRL_SELECT="Sel/Desel"
+
+# === HILFESYSTEM ===
+MENU_HELP_TITLE="HILFE"
+MENU_HELP_SCROLL_HINT="Verwenden Sie ↑↓ zum Scrollen"
+MENU_HELP_CLOSE="Schliessen"
+HELP_NOT_AVAILABLE="Keine detaillierte Hilfe fuer diesen Schritt verfuegbar."
 
 # === THEME SELECTOR ===
 MENU_THEME_TITLE="THEMA AUSWAEHLEN"

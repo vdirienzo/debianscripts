@@ -1,0 +1,334 @@
+# ============================================================================
+# Contenido de Ayuda para autoclean.sh - Espanol
+# ============================================================================
+# Formato: HELP_STEP_N donde N es 1-23
+# Estructura: Titulo, QUE HACE, COMO FUNCIONA, RECOMENDADO
+
+HELP_STEP_1="Verificar Conectividad
+
+QUE HACE:
+Verifica la conexion a internet antes de proceder con actualizaciones.
+
+COMO FUNCIONA:
+- Hace ping a servidores confiables (8.8.8.8, 1.1.1.1, google.com)
+- Prueba resolucion DNS
+- Valida configuracion de proxy si existe
+
+POR QUE IMPORTA:
+Sin conectividad, las actualizaciones fallaran. Evita perder tiempo.
+
+RECOMENDADO: Siempre habilitado salvo trabajo offline."
+
+HELP_STEP_2="Verificar Dependencias
+
+QUE HACE:
+Instala herramientas esenciales requeridas por autoclean.sh.
+
+HERRAMIENTAS VERIFICADAS:
+- timeshift: Snapshots para restauracion
+- needrestart: Detecta servicios a reiniciar
+- debsums: Verificacion de integridad
+- smartmontools: Monitoreo de discos
+
+RECOMENDADO: Siempre habilitado en primera ejecucion."
+
+HELP_STEP_3="Verificar Repositorios APT
+
+QUE HACE:
+Escanea /etc/apt/sources.list buscando repositorios problematicos.
+
+COMO FUNCIONA:
+- Detecta PPAs en sistemas no-Ubuntu
+- Encuentra entradas de CDROM/DVD obsoletas
+- Identifica fuentes duplicadas
+- Advierte sobre repos HTTP inseguros
+
+RECOMENDADO: Habilitar periodicamente para mantener fuentes limpias."
+
+HELP_STEP_4="Salud del Disco (SMART)
+
+QUE HACE:
+Verifica la salud del disco usando tecnologia SMART.
+
+COMO FUNCIONA:
+- Lee atributos SMART de los discos
+- Detecta senales tempranas de fallo
+- Reporta temperatura y sectores reasignados
+- Advierte sobre discos en riesgo
+
+POR QUE IMPORTA:
+La deteccion temprana puede prevenir perdida de datos.
+
+RECOMENDADO: Habilitar si tienes HDDs o SSDs con soporte SMART."
+
+HELP_STEP_5="Integridad de Paquetes (debsums)
+
+QUE HACE:
+Verifica que los paquetes instalados no hayan sido modificados.
+
+COMO FUNCIONA:
+- Compara archivos instalados contra checksums
+- Detecta modificaciones no autorizadas
+- Identifica archivos corruptos
+- Reporta archivos faltantes
+
+POR QUE IMPORTA:
+Detecta posibles compromisos de seguridad o corrupcion.
+
+RECOMENDADO: Habilitar periodicamente para auditoria."
+
+HELP_STEP_6="Verificacion de Seguridad
+
+QUE HACE:
+Audita la configuracion de seguridad del sistema.
+
+VERIFICACIONES:
+- Estado del firewall UFW y reglas
+- Configuracion SSH (root login, autenticacion)
+- Configuracion de unattended-upgrades
+- Estado de fail2ban y jails activos
+
+RECOMENDADO: Habilitar regularmente para cumplimiento de seguridad."
+
+HELP_STEP_7="Permisos Criticos
+
+QUE HACE:
+Audita permisos en archivos criticos de seguridad.
+
+ARCHIVOS VERIFICADOS:
+- /etc/passwd, /etc/shadow, /etc/sudoers
+- Archivos de configuracion SSH
+- Directorios cron
+- Conteo de binarios SUID/SGID
+
+POR QUE IMPORTA:
+Permisos incorrectos crean vulnerabilidades de seguridad.
+
+RECOMENDADO: Habilitar para auditorias de seguridad."
+
+HELP_STEP_8="Auditar Servicios
+
+QUE HACE:
+Analiza servicios systemd activos y detecta unidades fallidas.
+
+COMO FUNCIONA:
+- Lista todos los servicios activos
+- Detecta unidades systemd fallidas
+- Identifica servicios en estado degradado
+- Cuenta servicios corriendo vs totales
+
+RECOMENDADO: Habilitar para mantener salud del sistema."
+
+HELP_STEP_9="Backup de Configuraciones (tar)
+
+QUE HACE:
+Crea un backup comprimido de fuentes APT y configs del sistema.
+
+ARCHIVOS RESPALDADOS:
+- /etc/apt/sources.list y sources.list.d/
+- /etc/apt/preferences.d/
+- Lista de paquetes (dpkg --get-selections)
+
+UBICACION: /var/backups/autoclean/
+
+RECOMENDADO: Siempre habilitar antes de actualizaciones mayores."
+
+HELP_STEP_10="Snapshot Timeshift
+
+QUE HACE:
+Crea un snapshot del sistema usando Timeshift para restauracion facil.
+
+COMO FUNCIONA:
+- Usa modo RSYNC (defecto) o snapshots BTRFS
+- Guarda en ubicacion de backup configurada
+- Incremental: solo archivos cambiados ocupan espacio
+
+POR QUE IMPORTA:
+RED DE SEGURIDAD CRITICA. Si algo falla, puedes restaurar en segundos.
+
+RECOMENDADO: SIEMPRE HABILITAR antes de actualizaciones del sistema."
+
+HELP_STEP_11="Actualizar Repositorios
+
+QUE HACE:
+Refresca la base de datos de paquetes desde todas las fuentes.
+
+COMO FUNCIONA:
+- Ejecuta apt update
+- Descarga listas de paquetes actualizadas
+- Verifica errores de repositorio
+- Reporta cantidad de actualizaciones disponibles
+
+RECOMENDADO: Siempre habilitar antes de upgrades."
+
+HELP_STEP_12="Actualizar Sistema (APT)
+
+QUE HACE:
+Instala actualizaciones disponibles para todos los paquetes.
+
+COMO FUNCIONA:
+- Ejecuta apt upgrade (modo seguro)
+- Instala parches de seguridad
+- Actualiza paquetes instalados
+- Nunca remueve paquetes
+
+POR QUE IMPORTA:
+Mantiene el sistema seguro y actualizado.
+
+RECOMENDADO: Habilitar regularmente por seguridad."
+
+HELP_STEP_13="Actualizar Flatpak
+
+QUE HACE:
+Actualiza todas las aplicaciones Flatpak instaladas.
+
+COMO FUNCIONA:
+- Ejecuta flatpak update
+- Actualiza apps de sistema y usuario
+- Descarga actualizaciones delta cuando es posible
+
+OMITIR SI: No usas aplicaciones Flatpak.
+
+RECOMENDADO: Habilitar si tienes apps Flatpak."
+
+HELP_STEP_14="Actualizar Snap
+
+QUE HACE:
+Actualiza todos los paquetes Snap instalados.
+
+COMO FUNCIONA:
+- Ejecuta snap refresh
+- Descarga e instala nuevas versiones
+- Mantiene version anterior para rollback
+
+OMITIR SI: No usas paquetes Snap.
+
+RECOMENDADO: Habilitar si tienes apps Snap."
+
+HELP_STEP_15="Verificar Firmware
+
+QUE HACE:
+Busca actualizaciones de firmware disponibles usando fwupd.
+
+COMO FUNCIONA:
+- Consulta servicio fwupd
+- Verifica LVFS por actualizaciones
+- Lista dispositivos con actualizaciones pendientes
+
+NOTA: Requiere servicio fwupd corriendo.
+
+RECOMENDADO: Habilitar periodicamente en hardware soportado."
+
+HELP_STEP_16="Limpieza APT
+
+QUE HACE:
+Remueve paquetes huerfanos y limpia cache de APT.
+
+COMO FUNCIONA:
+- apt autoremove: Remueve dependencias no usadas
+- apt autoclean: Remueve archivos de paquetes obsoletos
+- dpkg --purge: Remueve configs residuales
+
+ESPACIO: Tipicamente libera 200MB - 2GB.
+
+RECOMENDADO: Habilitar regularmente. Operacion segura."
+
+HELP_STEP_17="Limpieza de Kernels
+
+QUE HACE:
+Remueve kernels Linux viejos manteniendo solo los mas recientes.
+
+COMO FUNCIONA:
+- Mantiene kernel actual corriendo
+- Mantiene N kernels mas nuevos (configurable, defecto: 3)
+- Remueve imagenes, headers y modulos viejos
+
+ESPACIO: Puede liberar 500MB - 2GB por kernel viejo.
+
+RECOMENDADO: Habilitar para liberar espacio en /boot."
+
+HELP_STEP_18="Limpieza Disco/Logs
+
+QUE HACE:
+Limpia archivos temporales, caches y logs viejos.
+
+UBICACIONES LIMPIADAS:
+- /tmp y /var/tmp (archivos viejos)
+- Caches de miniaturas
+- Cache de APT
+- Logs rotados viejos
+- Journal systemd (mantiene 7 dias)
+
+RECOMENDADO: Habilitar para recuperar espacio en disco."
+
+HELP_STEP_19="Limpieza Docker
+
+QUE HACE:
+Remueve imagenes, contenedores y volumenes Docker/Podman no usados.
+
+COMO FUNCIONA:
+- Remueve contenedores detenidos
+- Remueve imagenes huerfanas
+- Limpia volumenes no usados
+- Limpia cache de build
+
+OMITIR SI: No usas Docker/Podman.
+
+RECOMENDADO: Habilitar si usas contenedores."
+
+HELP_STEP_20="Sesiones Abandonadas
+
+QUE HACE:
+Limpia sesiones de usuario expiradas y archivos temporales.
+
+COMO FUNCIONA:
+- Remueve archivos de sesion expirados
+- Limpia sesiones de usuario systemd viejas
+- Remueve archivos de bloqueo obsoletos
+
+RECOMENDADO: Habilitar para sistemas multiusuario."
+
+HELP_STEP_21="Verificar Logrotate
+
+QUE HACE:
+Valida la configuracion de logrotate buscando errores.
+
+COMO FUNCIONA:
+- Ejecuta logrotate en modo debug
+- Verifica sintaxis de todos los configs
+- Reporta archivos de log mal configurados
+
+POR QUE IMPORTA:
+Config de logrotate malo puede llenar disco con logs sin rotar.
+
+RECOMENDADO: Habilitar periodicamente."
+
+HELP_STEP_22="Verificar Inodes
+
+QUE HACE:
+Monitorea uso de inodes para prevenir agotamiento del filesystem.
+
+COMO FUNCIONA:
+- Verifica porcentaje de uso de inodes por filesystem
+- Advierte si uso excede umbral
+- Identifica directorios con muchos inodes
+
+POR QUE IMPORTA:
+Quedarse sin inodes impide crear archivos aunque haya espacio libre.
+
+RECOMENDADO: Habilitar en sistemas con muchos archivos pequenos."
+
+HELP_STEP_23="Verificar Reinicio
+
+QUE HACE:
+Determina si se requiere reinicio del sistema despues de actualizaciones.
+
+COMO FUNCIONA:
+- Verifica /var/run/reboot-required
+- Usa needrestart para detectar procesos desactualizados
+- Lista servicios que necesitan reinicio
+
+POR QUE IMPORTA:
+Algunas actualizaciones requieren reinicio para efecto completo.
+
+RECOMENDADO: Siempre habilitar para mantenerse informado."

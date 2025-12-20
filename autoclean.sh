@@ -163,6 +163,10 @@ NOTIFIER_DESCRIPTIONS=()  # Descriptions for each notifier
 declare -A NOTIFIER_ENABLED   # Enabled/disabled state by code
 declare -A NOTIFIER_LOADED    # Successfully loaded notifiers
 
+# Help system configuration
+HELP_DIR="${SCRIPT_DIR}/plugins/help"
+HELP_WINDOW_HEIGHT=12     # Visible lines in scrollable help window
+
 # System parameters
 DIAS_LOGS=7
 KERNELS_TO_KEEP=3
@@ -936,6 +940,14 @@ load_language() {
             CURRENT_LANG="$lang_to_load"
             # Actualizar arrays con textos del idioma cargado
             update_language_arrays
+            # Load help content for current language (steps)
+            local help_file="${HELP_DIR}/help_${lang_to_load}.lang"
+            [ ! -f "$help_file" ] && help_file="${HELP_DIR}/help_en.lang"
+            [ -f "$help_file" ] && source "$help_file" 2>/dev/null
+            # Load help content for notifiers
+            local help_notif_file="${HELP_DIR}/help_notif_${lang_to_load}.lang"
+            [ ! -f "$help_notif_file" ] && help_notif_file="${HELP_DIR}/help_notif_en.lang"
+            [ -f "$help_notif_file" ] && source "$help_notif_file" 2>/dev/null
             return 0
         else
             echo "ERROR: Language file failed security validation"
@@ -1781,26 +1793,143 @@ show_notifier_help() {
     local code="$1"
     local notifier_file="${NOTIFIER_DIR}/${code}.notifier"
 
-    # Cargar el notificador
+    # Cargar el notificador para obtener NOTIFIER_NAME
     [ ! -f "$notifier_file" ] && return
     source "$notifier_file" 2>/dev/null
 
-    clear
+    # Buscar ayuda traducida primero (HELP_NOTIF_DESKTOP, HELP_NOTIF_TELEGRAM, etc.)
+    local help_var="HELP_NOTIF_${code^^}"  # Convertir a mayusculas
+    local help_text="${!help_var}"
 
-    # Verificar si tiene función de ayuda
-    if type -t notifier_help &>/dev/null; then
-        notifier_help
-    else
-        print_box_top
-        print_box_center "${BOLD}${MENU_HELP:-HELP}: ${NOTIFIER_NAME}${BOX_NC}"
-        print_box_sep
-        print_box_center "${DIM}${MENU_NO_HELP:-No help available for this notifier}${BOX_NC}"
-        print_box_bottom
+    # Fallback a funcion notifier_help() del archivo .notifier
+    if [ -z "$help_text" ] && type -t notifier_help &>/dev/null; then
+        help_text=$(notifier_help 2>/dev/null)
     fi
 
-    echo ""
-    printf "${DIM}${MENU_PRESS_ANY:-Press any key to continue}${NC}"
-    read -rsn1
+    # Si no hay ayuda, mostrar mensaje
+    if [ -z "$help_text" ]; then
+        clear
+        print_box_top
+        print_box_center "${BOLD}${MENU_HELP_TITLE:-HELP}: ${NOTIFIER_NAME}${BOX_NC}"
+        print_box_sep
+        print_box_center "${DIM}${MENU_NO_HELP:-No help available for this notifier}${BOX_NC}"
+        print_box_sep
+        print_box_center "${DIM}${MENU_PRESS_ANY:-Press any key to continue}${BOX_NC}"
+        print_box_bottom
+        read -rsn1
+        return
+    fi
+
+    # Procesar texto en líneas con word-wrap
+    local -a help_lines=()
+    local max_width=68
+    local line=""
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Saltar líneas de separadores largos
+        if [[ "$line" =~ ^=+$ ]] || [[ "$line" =~ ^-+$ ]]; then
+            continue
+        fi
+        # Línea vacía
+        if [ -z "$line" ]; then
+            help_lines+=("")
+            continue
+        fi
+        # Word-wrap de líneas largas
+        if [ ${#line} -le $max_width ]; then
+            help_lines+=("$line")
+        else
+            local remaining="$line"
+            while [ ${#remaining} -gt $max_width ]; do
+                local cut_pos=$max_width
+                local segment="${remaining:0:$cut_pos}"
+                local last_space=$(echo "$segment" | grep -bo ' ' | tail -1 | cut -d: -f1)
+                if [ -n "$last_space" ] && [ "$last_space" -gt 20 ]; then
+                    cut_pos=$last_space
+                fi
+                help_lines+=("${remaining:0:$cut_pos}")
+                remaining="${remaining:$cut_pos}"
+                remaining="${remaining# }"
+            done
+            [ -n "$remaining" ] && help_lines+=("$remaining")
+        fi
+    done <<< "$help_text"
+
+    local total_lines=${#help_lines[@]}
+    local scroll_offset=0
+    local visible_lines=${HELP_WINDOW_HEIGHT:-12}
+
+    # Ocultar cursor
+    tput civis 2>/dev/null
+    trap 'tput cnorm 2>/dev/null' RETURN
+
+    while true; do
+        clear
+        print_box_top
+        print_box_center "${BOLD}${MENU_HELP_TITLE:-HELP}: ${NOTIFIER_NAME}${BOX_NC}"
+        print_box_sep
+
+        # Indicador de scroll arriba
+        if [ $scroll_offset -gt 0 ]; then
+            print_box_center "${DIM}▲ ▲ ▲${BOX_NC}"
+        else
+            print_box_line ""
+        fi
+
+        # Mostrar líneas visibles
+        local end_line=$((scroll_offset + visible_lines))
+        [ $end_line -gt $total_lines ] && end_line=$total_lines
+
+        local i
+        for ((i = scroll_offset; i < end_line; i++)); do
+            print_box_line "  ${help_lines[$i]}"
+        done
+
+        # Rellenar líneas vacías si es necesario
+        local shown=$((end_line - scroll_offset))
+        for ((i = shown; i < visible_lines; i++)); do
+            print_box_line ""
+        done
+
+        # Indicador de scroll abajo
+        if [ $((scroll_offset + visible_lines)) -lt $total_lines ]; then
+            print_box_center "${DIM}▼ ▼ ▼${BOX_NC}"
+        else
+            print_box_line ""
+        fi
+
+        print_box_sep
+        local max_offset=$((total_lines - visible_lines))
+        [ $max_offset -lt 0 ] && max_offset=0
+        if [ $total_lines -gt $visible_lines ]; then
+            print_box_center "${DIM}${MENU_HELP_SCROLL_HINT:-Use ↑↓ to scroll}${BOX_NC}"
+        fi
+        print_box_center "${CYAN}[ESC]${BOX_NC} ${MENU_HELP_CLOSE:-Close}  ${CYAN}[Q]${BOX_NC} ${MENU_HELP_CLOSE:-Close}"
+        print_box_bottom
+
+        # Leer tecla
+        local key=""
+        IFS= read -rsn1 key
+
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 -t 0.1 key
+            case "$key" in
+                '[A') # Arriba
+                    [ $scroll_offset -gt 0 ] && ((scroll_offset--))
+                    ;;
+                '[B') # Abajo
+                    [ $scroll_offset -lt $max_offset ] && ((scroll_offset++))
+                    ;;
+                '') # ESC solo - salir
+                    tput cnorm 2>/dev/null
+                    return
+                    ;;
+            esac
+        elif [[ "$key" == "q" || "$key" == "Q" ]]; then
+            tput cnorm 2>/dev/null
+            return
+        fi
+    done
 }
 
 test_notifier() {
@@ -2428,6 +2557,123 @@ show_step_summary() {
 }
 
 # ============================================================================
+# CONTEXTUAL HELP SYSTEM
+# ============================================================================
+
+show_step_help() {
+    local step_index="$1"
+    local step_number=$((step_index + 1))
+    local help_var="HELP_STEP_${step_number}"
+    local help_content="${!help_var}"
+
+    # Fallback if no help available
+    if [ -z "$help_content" ]; then
+        help_content="${HELP_NOT_AVAILABLE:-No help available for this step.}"
+    fi
+
+    # Convert content to array of lines with word-wrap at 72 chars
+    local -a help_lines=()
+    local max_width=$((BOX_INNER - 4))
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        if [ -z "$line" ]; then
+            help_lines+=("")
+        elif [ ${#line} -le $max_width ]; then
+            help_lines+=("$line")
+        else
+            # Word wrap long lines
+            local words=($line)
+            local current_line=""
+            for word in "${words[@]}"; do
+                if [ -z "$current_line" ]; then
+                    current_line="$word"
+                elif [ $((${#current_line} + ${#word} + 1)) -le $max_width ]; then
+                    current_line+=" $word"
+                else
+                    help_lines+=("$current_line")
+                    current_line="$word"
+                fi
+            done
+            [ -n "$current_line" ] && help_lines+=("$current_line")
+        fi
+    done <<< "$help_content"
+
+    local total_lines=${#help_lines[@]}
+    local visible_lines=${HELP_WINDOW_HEIGHT:-12}
+    local max_scroll=$((total_lines - visible_lines))
+    [ $max_scroll -lt 0 ] && max_scroll=0
+    local scroll_offset=0
+
+    # Hide cursor
+    tput civis 2>/dev/null
+    trap 'tput cnorm 2>/dev/null' RETURN
+
+    while true; do
+        clear
+
+        # Header with step name
+        print_box_top
+        print_box_center "${BOLD}${CYAN}${MENU_HELP_TITLE:-HELP}${BOX_NC}: ${STEP_SHORT_NAMES[$step_index]}"
+        print_box_sep
+
+        # Scrollable content area
+        local visible_end=$((scroll_offset + visible_lines))
+        [ $visible_end -gt $total_lines ] && visible_end=$total_lines
+
+        for ((i=scroll_offset; i<visible_end; i++)); do
+            print_box_line "  ${help_lines[$i]}"
+        done
+
+        # Fill empty lines if content is shorter than window
+        local shown_lines=$((visible_end - scroll_offset))
+        for ((i=shown_lines; i<visible_lines; i++)); do
+            print_box_line ""
+        done
+
+        # Scroll indicators (only if scrollable)
+        print_box_sep
+        if [ $total_lines -gt $visible_lines ]; then
+            local scroll_indicator=""
+            [ $scroll_offset -gt 0 ] && scroll_indicator+="${CYAN}▲${BOX_NC} "
+            scroll_indicator+="${MENU_HELP_SCROLL_HINT:-Use ↑↓ to scroll}"
+            [ $scroll_offset -lt $max_scroll ] && scroll_indicator+=" ${CYAN}▼${BOX_NC}"
+            print_box_center "$scroll_indicator"
+        else
+            print_box_line ""
+        fi
+
+        # Footer with controls
+        print_box_sep
+        print_box_center "${CYAN}[ESC]${BOX_NC} ${MENU_HELP_CLOSE:-Close}    ${CYAN}[Q]${BOX_NC} ${MENU_HELP_CLOSE:-Close}"
+        print_box_bottom
+
+        # Read key
+        local key=""
+        IFS= read -rsn1 key
+
+        # Handle keys
+        if [[ "$key" == $'\x1b' ]]; then
+            read -rsn2 -t 0.1 key
+            case "$key" in
+                '[A') # UP arrow
+                    [ $scroll_offset -gt 0 ] && ((scroll_offset--))
+                    ;;
+                '[B') # DOWN arrow
+                    [ $scroll_offset -lt $max_scroll ] && ((scroll_offset++))
+                    ;;
+                '') # ESC alone
+                    break
+                    ;;
+            esac
+        elif [[ "$key" == "q" || "$key" == "Q" ]]; then
+            break
+        fi
+    done
+
+    tput cnorm 2>/dev/null
+}
+
+# ============================================================================
 # MENÚ INTERACTIVO DE CONFIGURACIÓN
 # ============================================================================
 
@@ -2504,7 +2750,8 @@ show_interactive_menu() {
         print_box_sep
         print_box_line "${MENU_SELECTED}: ${GREEN}${active_count}${BOX_NC}/${total_items}    ${MENU_PROFILE}: $(config_exists && echo "${GREEN}${MENU_PROFILE_SAVED}${BOX_NC}" || echo "${DIM}${MENU_PROFILE_UNSAVED}${BOX_NC}")"
         print_box_sep
-        print_box_center "${CYAN}[ENTER]${BOX_NC} ${MENU_CTRL_ENTER} ${CYAN}[G]${BOX_NC} ${MENU_CTRL_SAVE} ${CYAN}[L]${BOX_NC} ${MENU_CTRL_LANG} ${CYAN}[T]${BOX_NC} ${MENU_CTRL_THEME:-Theme} ${CYAN}[O]${BOX_NC} ${MENU_CTRL_NOTIF:-Notif} ${CYAN}[Q]${BOX_NC} ${MENU_CTRL_QUIT}"
+        print_box_center "${CYAN}[ENTER]${BOX_NC} ${MENU_CTRL_ENTER} ${CYAN}[H]${BOX_NC} ${MENU_CTRL_HELP:-Help} ${CYAN}[G]${BOX_NC} ${MENU_CTRL_SAVE} ${CYAN}[Q]${BOX_NC} ${MENU_CTRL_QUIT}"
+        print_box_center "${CYAN}[S]${BOX_NC} ${MENU_CTRL_SELECT:-Sel/Desel} ${CYAN}[L]${BOX_NC} ${MENU_CTRL_LANG} ${CYAN}[T]${BOX_NC} ${MENU_CTRL_THEME:-Theme} ${CYAN}[O]${BOX_NC} ${MENU_CTRL_NOTIF:-Notif}"
         print_box_bottom
 
         # Leer tecla
@@ -2562,13 +2809,25 @@ show_interactive_menu() {
             menu_running=false
         else
             case "$key" in
-                'a'|'A') for var_name in "${MENU_STEP_VARS[@]}"; do declare -n ref="$var_name"; ref=1; done ;;
-                'n'|'N') for var_name in "${MENU_STEP_VARS[@]}"; do declare -n ref="$var_name"; ref=0; done ;;
+                's'|'S')
+                    # Toggle: si hay alguno desactivado, activar todos; si todos activos, desactivar todos
+                    local all_active=1
+                    for var_name in "${MENU_STEP_VARS[@]}"; do
+                        declare -n ref="$var_name"
+                        [ "$ref" != "1" ] && all_active=0 && break
+                    done
+                    if [ "$all_active" = "1" ]; then
+                        for var_name in "${MENU_STEP_VARS[@]}"; do declare -n ref="$var_name"; ref=0; done
+                    else
+                        for var_name in "${MENU_STEP_VARS[@]}"; do declare -n ref="$var_name"; ref=1; done
+                    fi
+                    ;;
                 'g'|'G') save_config ;;
                 'd'|'D') config_exists && delete_config ;;
                 'l'|'L') show_language_selector ;;
                 't'|'T') show_theme_selector ;;
                 'o'|'O') show_notification_menu ;;
+                'h'|'H') show_step_help "$current_index" ;;
                 'q'|'Q') tput cnorm 2>/dev/null; die "${MSG_CANCELLED_BY_USER}" ;;
             esac
         fi

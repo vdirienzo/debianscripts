@@ -1,0 +1,144 @@
+# ============================================================================
+# Hilfe-Inhalte fuer Notifier - Deutsch
+# ============================================================================
+# Format: HELP_NOTIF_<CODE> wobei CODE der Notifier-Code ist (Grossbuchstaben)
+
+HELP_NOTIF_DESKTOP="Desktop-Benachrichtigungen (notify-send)
+
+WAS ES TUT:
+Zeigt Systembenachrichtigungen auf Ihrem Desktop an.
+
+VORAUSSETZUNGEN:
+- notify-send (libnotify-bin Paket)
+- Laufender Display-Server (X11 oder Wayland)
+- Benachrichtigungsdienst (in den meisten Desktops enthalten)
+
+INSTALLATION:
+  sudo apt install libnotify-bin
+
+WIE ES FUNKTIONIERT:
+- Erkennt automatisch Ihre Display-Sitzung
+- Funktioniert korrekt mit sudo
+- Sendet an Ihren Desktop-Benachrichtigungsbereich
+
+HINWEISE:
+- Funktioniert nur in grafischen Sitzungen
+- Funktioniert nicht in SSH oder TTY-Konsolen
+
+KEINE KONFIGURATION NOETIG - einfach aktivieren!"
+
+HELP_NOTIF_TELEGRAM="Telegram Bot Benachrichtigungen
+
+WAS ES TUT:
+Sendet Benachrichtigungen ueber Telegram Bot API an Benutzer, Gruppen oder Kanaele.
+
+EINRICHTUNGSSCHRITTE:
+
+1. BOT ERSTELLEN:
+   - Oeffnen Sie Telegram, suchen Sie @BotFather
+   - Senden Sie /newbot und folgen Sie den Anweisungen
+   - Kopieren Sie das Bot-Token (123456789:ABCdef...)
+
+2. CHAT-ID ERMITTELN:
+   Persoenlich: Suchen Sie @userinfobot, zeigt Ihre ID
+   Gruppe: Bot zur Gruppe hinzufuegen, getUpdates API pruefen
+   Kanal: Bot als Admin hinzufuegen, @kanalname verwenden
+
+3. KONFIGURIEREN:
+   Bot-Token und Chat-ID im Konfig-Menu eingeben
+
+TESTEN:
+Test-Option verwenden um Konfiguration zu pruefen.
+
+FEHLERBEHEBUNG:
+- Unauthorized: Bot-Token pruefen
+- Chat not found: Zuerst Gespraech mit Bot starten
+- Gruppen: Bot muss Mitglied sein
+- Kanaele: Bot muss Admin sein"
+
+HELP_NOTIF_EMAIL="Email-Benachrichtigungen (msmtp)
+
+WAS ES TUT:
+Sendet Email-Benachrichtigungen mit dem msmtp Mail-Client.
+
+VORAUSSETZUNGEN:
+- msmtp und msmtp-mta Pakete
+- Gueltige Email-Kontodaten
+
+INSTALLATION:
+  sudo apt install msmtp msmtp-mta
+
+KONFIGURATION:
+1. Email-Adresse: Ihre Absender-Email
+2. SMTP-Server: Mailserver (smtp.gmail.com)
+3. SMTP-Port: Normalerweise 587 (TLS) oder 465 (SSL)
+4. Benutzername: Ihr Email-Benutzername
+5. Passwort: Ihr Passwort oder App-Passwort
+
+GMAIL-BENUTZER:
+- 2FA in Ihrem Google-Konto aktivieren
+- App-Passwort unter myaccount.google.com generieren
+- App-Passwort statt normalem Passwort verwenden
+
+TESTEN:
+Alle Felder konfigurieren, dann Test-Option verwenden."
+
+HELP_NOTIF_NTFY="ntfy.sh Push-Benachrichtigungen
+
+WAS ES TUT:
+Sendet Push-Benachrichtigungen ueber ntfy.sh an Handys und Desktops.
+
+WAS IST NTFY:
+Kostenloser, Open-Source Push-Benachrichtigungsdienst.
+Kein Konto fuer oeffentliche Topics noetig.
+
+EINRICHTUNG:
+1. ntfy App auf Handy/Desktop installieren
+2. Ein Topic abonnieren (beliebiger eindeutiger Name)
+3. Gleichen Topic-Namen in Konfig eingeben
+
+KONFIGURATION:
+- Server: ntfy.sh (Standard) oder selbst gehostet
+- Topic: Ihr eindeutiger Topic-Name
+- Token: Nur bei Authentifizierung
+
+TIPPS:
+- Eindeutige Topic-Namen verwenden gegen Spam
+- Selbst hosten fuer private Benachrichtigungen
+- Funktioniert auf Android, iOS und Desktop
+
+TESTEN:
+Zuerst Topic abonnieren, dann Test-Option verwenden."
+
+HELP_NOTIF_WEBHOOK="Webhook-Benachrichtigungen
+
+WAS ES TUT:
+Sendet HTTP POST-Anfragen an benutzerdefinierte Webhook-Endpunkte.
+Unterstuetzt Discord, Slack, Teams und eigene Dienste.
+
+VERFUEGBARE VORLAGEN:
+- Discord: Discord Webhook-URL
+- Slack: Slack Incoming Webhook
+- Teams: Microsoft Teams Connector
+- Custom: Beliebiger HTTP-Endpunkt
+
+KONFIGURATION:
+1. Vorlage auswaehlen oder Custom verwenden
+2. Webhook-URL eingeben
+3. Optional JSON-Vorlage anpassen
+
+JSON-VORLAGEN-VARIABLEN:
+- {title}: Benachrichtigungstitel
+- {message}: Benachrichtigungstext
+- {severity}: info/warning/error/success
+- {timestamp}: ISO 8601 Zeitstempel
+- {hostname}: System-Hostname
+
+DISCORD EINRICHTEN:
+Servereinstellungen > Integrationen > Webhooks > Neu
+
+SLACK EINRICHTEN:
+Apps > Incoming Webhooks > Zum Kanal hinzufuegen
+
+TESTEN:
+Webhook-URL eingeben, dann Test-Option verwenden."

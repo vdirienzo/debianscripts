@@ -1,0 +1,321 @@
+# ============================================================================
+# Hilfe-Inhalte fuer autoclean.sh - Deutsch
+# ============================================================================
+# Format: HELP_STEP_N wobei N 1-23 ist
+# Struktur: Titel, WAS ES TUT, WIE ES FUNKTIONIERT, EMPFOHLEN
+
+HELP_STEP_1="Konnektivitaet pruefen
+
+WAS ES TUT:
+Ueberprueft die Internetverbindung vor Updates und Downloads.
+
+WIE ES FUNKTIONIERT:
+- Pingt zuverlaessige Server (8.8.8.8, 1.1.1.1, google.com)
+- Testet DNS-Aufloesung
+- Validiert Proxy-Konfiguration falls gesetzt
+
+WARUM ES WICHTIG IST:
+Ohne Verbindung schlagen Paket-Updates fehl.
+
+EMPFOHLEN: Immer aktiviert, ausser bei Offline-Arbeit."
+
+HELP_STEP_2="Abhaengigkeiten pruefen
+
+WAS ES TUT:
+Installiert erforderliche Tools fuer autoclean.sh falls fehlend.
+
+TOOLS DIE GEPRUEFT WERDEN:
+- timeshift: System-Snapshots fuer Rollback
+- needrestart: Erkennt Dienste die Neustart benoetigen
+- debsums: Paket-Integritaetspruefung
+- smartmontools: Festplatten-Gesundheitsueberwachung
+
+EMPFOHLEN: Immer beim ersten Start aktiviert."
+
+HELP_STEP_3="APT-Repositorys pruefen
+
+WAS ES TUT:
+Scannt /etc/apt/sources.list nach problematischen Repositorys.
+
+WIE ES FUNKTIONIERT:
+- Erkennt PPAs auf Nicht-Ubuntu-Systemen
+- Findet veraltete CDROM/DVD-Eintraege
+- Identifiziert doppelte Quellen
+- Warnt vor unsicheren HTTP-Repos
+
+EMPFOHLEN: Regelmaessig aktivieren um Quellen sauber zu halten."
+
+HELP_STEP_4="Festplatten-Gesundheit (SMART)
+
+WAS ES TUT:
+Prueft Festplatten-Gesundheit mit SMART-Technologie.
+
+WIE ES FUNKTIONIERT:
+- Liest SMART-Attribute von Laufwerken
+- Erkennt fruehe Anzeichen von Festplattenausfall
+- Meldet Temperatur und reallocierte Sektoren
+- Warnt vor gefaehrdeten Laufwerken
+
+EMPFOHLEN: Aktivieren wenn HDDs oder SSDs mit SMART-Support vorhanden."
+
+HELP_STEP_5="Paket-Integritaet (debsums)
+
+WAS ES TUT:
+Ueberprueft ob installierte Pakete geaendert oder beschaedigt wurden.
+
+WIE ES FUNKTIONIERT:
+- Vergleicht installierte Dateien mit Paket-Pruefsummen
+- Erkennt unautorisierte Aenderungen
+- Identifiziert beschaedigte Dateien
+- Meldet fehlende Dateien
+
+EMPFOHLEN: Regelmaessig fuer Sicherheitsaudits aktivieren."
+
+HELP_STEP_6="Sicherheits-Updates pruefen
+
+WAS ES TUT:
+Auditiert System-Sicherheitskonfiguration und Haertungsstatus.
+
+DURCHGEFUEHRTE PRUEFUNGEN:
+- UFW-Firewall-Status und Regeln
+- SSH-Konfiguration (Root-Login, Passwort-Auth)
+- Unattended-upgrades Konfiguration
+- fail2ban Status und aktive Jails
+
+EMPFOHLEN: Regelmaessig fuer Sicherheits-Compliance aktivieren."
+
+HELP_STEP_7="Kritische Berechtigungen
+
+WAS ES TUT:
+Auditiert Berechtigungen auf sicherheitskritischen Dateien.
+
+GEPRUEKTE DATEIEN:
+- /etc/passwd, /etc/shadow, /etc/sudoers
+- SSH-Konfigurationsdateien
+- Cron-Verzeichnisse
+- SUID/SGID-Binaries Anzahl
+
+EMPFOHLEN: Fuer Sicherheitsaudits aktivieren."
+
+HELP_STEP_8="Dienste auditieren
+
+WAS ES TUT:
+Analysiert aktive systemd-Dienste und erkennt fehlgeschlagene Units.
+
+WIE ES FUNKTIONIERT:
+- Listet alle aktiven Dienste
+- Erkennt fehlgeschlagene systemd-Units
+- Identifiziert Dienste im degradierten Zustand
+- Zaehlt laufende vs. totale Dienste
+
+EMPFOHLEN: Aktivieren um Systemgesundheit zu erhalten."
+
+HELP_STEP_9="Konfigurationen sichern (tar)
+
+WAS ES TUT:
+Erstellt komprimiertes Backup von APT-Quellen und System-Configs.
+
+GESICHERTE DATEIEN:
+- /etc/apt/sources.list und sources.list.d/
+- /etc/apt/preferences.d/
+- Paketliste (dpkg --get-selections)
+
+SPEICHERORT: /var/backups/autoclean/
+
+EMPFOHLEN: Immer vor groesseren Updates aktivieren."
+
+HELP_STEP_10="Timeshift Snapshot
+
+WAS ES TUT:
+Erstellt System-Snapshot mit Timeshift fuer einfache Wiederherstellung.
+
+WIE ES FUNKTIONIERT:
+- Nutzt RSYNC-Modus (Standard) oder BTRFS-Snapshots
+- Speichert am konfigurierten Backup-Ort
+- Inkrementell: nur geaenderte Dateien belegen Platz
+
+KRITISCHES SICHERHEITSNETZ. Bei Problemen Wiederherstellung in Sekunden.
+
+EMPFOHLEN: IMMER vor System-Upgrades aktivieren."
+
+HELP_STEP_11="Repositorys aktualisieren
+
+WAS ES TUT:
+Aktualisiert Paketdatenbank von allen konfigurierten Quellen.
+
+WIE ES FUNKTIONIERT:
+- Fuehrt apt update aus
+- Laedt aktuelle Paketlisten herunter
+- Prueft auf Repository-Fehler
+- Meldet Anzahl verfuegbarer Updates
+
+EMPFOHLEN: Immer vor Upgrades aktivieren."
+
+HELP_STEP_12="System aktualisieren (APT)
+
+WAS ES TUT:
+Installiert verfuegbare Updates fuer alle Pakete.
+
+WIE ES FUNKTIONIERT:
+- Fuehrt apt upgrade aus (sicherer Modus)
+- Installiert Sicherheitspatches
+- Aktualisiert installierte Pakete
+- Entfernt niemals Pakete
+
+EMPFOHLEN: Regelmaessig fuer Sicherheit aktivieren."
+
+HELP_STEP_13="Flatpak aktualisieren
+
+WAS ES TUT:
+Aktualisiert alle installierten Flatpak-Anwendungen.
+
+WIE ES FUNKTIONIERT:
+- Fuehrt flatpak update aus
+- Aktualisiert System- und Benutzer-Apps
+- Laedt Delta-Updates wenn moeglich
+
+UEBERSPRINGEN WENN: Sie keine Flatpak-Apps nutzen.
+
+EMPFOHLEN: Aktivieren wenn Flatpak-Apps vorhanden."
+
+HELP_STEP_14="Snap aktualisieren
+
+WAS ES TUT:
+Aktualisiert alle installierten Snap-Pakete.
+
+WIE ES FUNKTIONIERT:
+- Fuehrt snap refresh aus
+- Laedt und installiert neue Versionen
+- Behaelt vorherige Version fuer Rollback
+
+UEBERSPRINGEN WENN: Sie keine Snap-Pakete nutzen.
+
+EMPFOHLEN: Aktivieren wenn Snap-Apps vorhanden."
+
+HELP_STEP_15="Firmware pruefen
+
+WAS ES TUT:
+Sucht nach verfuegbaren Firmware-Updates mit fwupd.
+
+WIE ES FUNKTIONIERT:
+- Fragt fwupd-Service ab
+- Prueft LVFS auf Updates
+- Listet Geraete mit ausstehenden Updates
+
+HINWEIS: Erfordert laufenden fwupd-Service.
+
+EMPFOHLEN: Regelmaessig auf unterstuetzter Hardware aktivieren."
+
+HELP_STEP_16="APT-Bereinigung
+
+WAS ES TUT:
+Entfernt verwaiste Pakete und bereinigt APT-Cache.
+
+WIE ES FUNKTIONIERT:
+- apt autoremove: Entfernt ungenutzte Abhaengigkeiten
+- apt autoclean: Entfernt veraltete Paketdateien
+- dpkg --purge: Entfernt Rest-Konfigurationen
+
+SPEICHERPLATZ: Typisch 200MB - 2GB frei.
+
+EMPFOHLEN: Regelmaessig aktivieren. Sichere Operation."
+
+HELP_STEP_17="Kernel-Bereinigung
+
+WAS ES TUT:
+Entfernt alte Linux-Kernel, behaelt nur die neuesten.
+
+WIE ES FUNKTIONIERT:
+- Behaelt aktuell laufenden Kernel
+- Behaelt N neueste Kernel (konfigurierbar, Standard: 3)
+- Entfernt alte Images, Header, Module
+
+SPEICHERPLATZ: Kann 500MB - 2GB pro altem Kernel freigeben.
+
+EMPFOHLEN: Aktivieren um /boot-Speicherplatz freizugeben."
+
+HELP_STEP_18="Festplatten/Logs-Bereinigung
+
+WAS ES TUT:
+Bereinigt temporaere Dateien, Caches und alte Logs.
+
+BEREINIGTE ORTE:
+- /tmp und /var/tmp (alte Dateien)
+- Thumbnail-Caches
+- APT-Cache
+- Alte rotierte Logs
+- Systemd-Journal (behaelt 7 Tage)
+
+EMPFOHLEN: Aktivieren fuer Speicherplatz-Rueckgewinnung."
+
+HELP_STEP_19="Docker-Bereinigung
+
+WAS ES TUT:
+Entfernt ungenutzte Docker/Podman Images, Container und Volumes.
+
+WIE ES FUNKTIONIERT:
+- Entfernt gestoppte Container
+- Entfernt verwaiste Images
+- Bereinigt ungenutzte Volumes
+- Bereinigt Build-Cache
+
+UEBERSPRINGEN WENN: Sie kein Docker/Podman nutzen.
+
+EMPFOHLEN: Aktivieren wenn Container genutzt werden."
+
+HELP_STEP_20="Aufgegebene Sitzungen
+
+WAS ES TUT:
+Bereinigt abgelaufene Benutzer-Sitzungen und temporaere Dateien.
+
+WIE ES FUNKTIONIERT:
+- Entfernt abgelaufene Sitzungsdateien
+- Bereinigt alte systemd-Benutzer-Sitzungen
+- Entfernt veraltete Sperrdateien
+
+EMPFOHLEN: Aktivieren fuer Mehrbenutzersysteme."
+
+HELP_STEP_21="Logrotate pruefen
+
+WAS ES TUT:
+Validiert Logrotate-Konfiguration auf Fehler.
+
+WIE ES FUNKTIONIERT:
+- Fuehrt logrotate im Debug-Modus aus
+- Prueft Syntax aller Config-Dateien
+- Meldet falsch konfigurierte Log-Dateien
+
+WARUM ES WICHTIG IST:
+Schlechte Logrotate-Config kann Festplatte fuellen.
+
+EMPFOHLEN: Regelmaessig aktivieren."
+
+HELP_STEP_22="Inodes pruefen
+
+WAS ES TUT:
+Ueberwacht Inode-Nutzung um Dateisystem-Erschoepfung zu verhindern.
+
+WIE ES FUNKTIONIERT:
+- Prueft Inode-Nutzung pro Dateisystem
+- Warnt wenn Nutzung Schwellwert uebersteigt
+- Identifiziert Verzeichnisse mit vielen Inodes
+
+WARUM ES WICHTIG IST:
+Ohne Inodes keine neuen Dateien trotz freiem Speicherplatz.
+
+EMPFOHLEN: Aktivieren bei Systemen mit vielen kleinen Dateien."
+
+HELP_STEP_23="Neustart pruefen
+
+WAS ES TUT:
+Ermittelt ob Systemneustart nach Updates erforderlich ist.
+
+WIE ES FUNKTIONIERT:
+- Prueft /var/run/reboot-required
+- Nutzt needrestart um veraltete Prozesse zu erkennen
+- Listet Dienste die Neustart benoetigen
+
+WARUM ES WICHTIG IST:
+Manche Updates erfordern Neustart fuer volle Wirkung.
+
+EMPFOHLEN: Immer aktivieren um informiert zu bleiben."

@@ -77,6 +77,15 @@ MENU_CTRL_DELETE="Elimina"
 MENU_CTRL_LANG="Lingua"
 MENU_CTRL_THEME="Tema"
 MENU_CTRL_QUIT="Esci"
+MENU_CTRL_HELP="Aiuto"
+MENU_CTRL_ALL="Tutti/Nessuno"
+MENU_CTRL_SELECT="Sel/Desel"
+
+# === SISTEMA DI AIUTO ===
+MENU_HELP_TITLE="AIUTO"
+MENU_HELP_SCROLL_HINT="Usa ↑↓ per scorrere"
+MENU_HELP_CLOSE="Chiudi"
+HELP_NOT_AVAILABLE="Nessun aiuto dettagliato disponibile per questo passaggio."
 
 # === THEME SELECTOR ===
 MENU_THEME_TITLE="SELEZIONA TEMA"

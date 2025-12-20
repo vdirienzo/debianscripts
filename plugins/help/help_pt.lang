@@ -1,0 +1,321 @@
+# ============================================================================
+# Conteudo de Ajuda para autoclean.sh - Portugues
+# ============================================================================
+# Formato: HELP_STEP_N onde N e 1-23
+# Estrutura: Titulo, O QUE FAZ, COMO FUNCIONA, RECOMENDADO
+
+HELP_STEP_1="Verificar Conectividade
+
+O QUE FAZ:
+Verifica a conexao com a internet antes de atualizacoes e downloads.
+
+COMO FUNCIONA:
+- Faz ping em servidores confiaveis (8.8.8.8, 1.1.1.1, google.com)
+- Testa resolucao DNS
+- Valida configuracao de proxy se definida
+
+POR QUE IMPORTA:
+Sem conectividade, atualizacoes de pacotes falharam.
+
+RECOMENDADO: Sempre ativado, exceto trabalho offline."
+
+HELP_STEP_2="Verificar Dependencias
+
+O QUE FAZ:
+Instala ferramentas essenciais necessarias pelo autoclean.sh.
+
+FERRAMENTAS VERIFICADAS:
+- timeshift: Snapshots do sistema para restauracao
+- needrestart: Detecta servicos que precisam reiniciar
+- debsums: Verificacao de integridade de pacotes
+- smartmontools: Monitoramento de saude do disco
+
+RECOMENDADO: Sempre ativado na primeira execucao."
+
+HELP_STEP_3="Verificar Repositorios APT
+
+O QUE FAZ:
+Escaneia /etc/apt/sources.list por repositorios problematicos.
+
+COMO FUNCIONA:
+- Detecta PPAs em sistemas nao-Ubuntu
+- Encontra entradas de CDROM/DVD obsoletas
+- Identifica fontes duplicadas
+- Avisa sobre repos HTTP inseguros
+
+RECOMENDADO: Ativar periodicamente para manter fontes limpas."
+
+HELP_STEP_4="Saude do Disco (SMART)
+
+O QUE FAZ:
+Verifica a saude do disco usando tecnologia SMART.
+
+COMO FUNCIONA:
+- Le atributos SMART dos discos
+- Detecta sinais precoces de falha
+- Relata temperatura e setores realocados
+- Avisa sobre discos em risco
+
+RECOMENDADO: Ativar se tiver HDDs ou SSDs com suporte SMART."
+
+HELP_STEP_5="Integridade de Pacotes (debsums)
+
+O QUE FAZ:
+Verifica se pacotes instalados nao foram modificados ou corrompidos.
+
+COMO FUNCIONA:
+- Compara arquivos instalados com checksums dos pacotes
+- Detecta modificacoes nao autorizadas
+- Identifica arquivos corrompidos
+- Relata arquivos faltando
+
+RECOMENDADO: Ativar periodicamente para auditoria de seguranca."
+
+HELP_STEP_6="Verificacao de Seguranca
+
+O QUE FAZ:
+Audita configuracao de seguranca do sistema e status de hardening.
+
+VERIFICACOES REALIZADAS:
+- Status do firewall UFW e regras
+- Configuracao SSH (login root, auth por senha)
+- Configuracao de unattended-upgrades
+- Status fail2ban e jails ativos
+
+RECOMENDADO: Ativar regularmente para conformidade de seguranca."
+
+HELP_STEP_7="Permissoes Criticas
+
+O QUE FAZ:
+Audita permissoes em arquivos criticos de seguranca.
+
+ARQUIVOS VERIFICADOS:
+- /etc/passwd, /etc/shadow, /etc/sudoers
+- Arquivos de configuracao SSH
+- Diretorios cron
+- Contagem de binarios SUID/SGID
+
+RECOMENDADO: Ativar para auditorias de seguranca."
+
+HELP_STEP_8="Auditar Servicos
+
+O QUE FAZ:
+Analisa servicos systemd ativos e detecta unidades falhadas.
+
+COMO FUNCIONA:
+- Lista todos os servicos ativos
+- Detecta unidades systemd falhadas
+- Identifica servicos em estado degradado
+- Conta servicos rodando vs total
+
+RECOMENDADO: Ativar para manter saude do sistema."
+
+HELP_STEP_9="Backup de Configuracoes (tar)
+
+O QUE FAZ:
+Cria backup comprimido de fontes APT e configs do sistema.
+
+ARQUIVOS BACKUPEADOS:
+- /etc/apt/sources.list e sources.list.d/
+- /etc/apt/preferences.d/
+- Lista de pacotes (dpkg --get-selections)
+
+LOCALIZACAO: /var/backups/autoclean/
+
+RECOMENDADO: Sempre ativar antes de atualizacoes maiores."
+
+HELP_STEP_10="Snapshot Timeshift
+
+O QUE FAZ:
+Cria snapshot do sistema usando Timeshift para restauracao facil.
+
+COMO FUNCIONA:
+- Usa modo RSYNC (padrao) ou snapshots BTRFS
+- Salva na localizacao de backup configurada
+- Incremental: apenas arquivos alterados ocupam espaco
+
+REDE DE SEGURANCA CRITICA. Se algo falhar, restaure em segundos.
+
+RECOMENDADO: SEMPRE ATIVAR antes de upgrades do sistema."
+
+HELP_STEP_11="Atualizar Repositorios
+
+O QUE FAZ:
+Atualiza banco de dados de pacotes de todas as fontes configuradas.
+
+COMO FUNCIONA:
+- Executa apt update
+- Baixa listas de pacotes atualizadas
+- Verifica erros de repositorio
+- Relata quantidade de atualizacoes disponiveis
+
+RECOMENDADO: Sempre ativar antes de upgrades."
+
+HELP_STEP_12="Atualizar Sistema (APT)
+
+O QUE FAZ:
+Instala atualizacoes disponiveis para todos os pacotes.
+
+COMO FUNCIONA:
+- Executa apt upgrade (modo seguro)
+- Instala patches de seguranca
+- Atualiza pacotes instalados
+- Nunca remove pacotes
+
+RECOMENDADO: Ativar regularmente para seguranca."
+
+HELP_STEP_13="Atualizar Flatpak
+
+O QUE FAZ:
+Atualiza todos os aplicativos Flatpak instalados.
+
+COMO FUNCIONA:
+- Executa flatpak update
+- Atualiza apps de sistema e usuario
+- Baixa atualizacoes delta quando possivel
+
+PULAR SE: Voce nao usa aplicativos Flatpak.
+
+RECOMENDADO: Ativar se tiver apps Flatpak."
+
+HELP_STEP_14="Atualizar Snap
+
+O QUE FAZ:
+Atualiza todos os pacotes Snap instalados.
+
+COMO FUNCIONA:
+- Executa snap refresh
+- Baixa e instala novas versoes
+- Mantem versao anterior para rollback
+
+PULAR SE: Voce nao usa pacotes Snap.
+
+RECOMENDADO: Ativar se tiver apps Snap."
+
+HELP_STEP_15="Verificar Firmware
+
+O QUE FAZ:
+Busca atualizacoes de firmware disponiveis usando fwupd.
+
+COMO FUNCIONA:
+- Consulta servico fwupd
+- Verifica LVFS por atualizacoes
+- Lista dispositivos com atualizacoes pendentes
+
+NOTA: Requer servico fwupd rodando.
+
+RECOMENDADO: Ativar periodicamente em hardware suportado."
+
+HELP_STEP_16="Limpeza APT
+
+O QUE FAZ:
+Remove pacotes orfaos e limpa cache do APT.
+
+COMO FUNCIONA:
+- apt autoremove: Remove dependencias nao usadas
+- apt autoclean: Remove arquivos de pacotes obsoletos
+- dpkg --purge: Remove configs residuais
+
+ESPACO: Tipicamente libera 200MB - 2GB.
+
+RECOMENDADO: Ativar regularmente. Operacao segura."
+
+HELP_STEP_17="Limpeza de Kernels
+
+O QUE FAZ:
+Remove kernels Linux antigos mantendo apenas os mais recentes.
+
+COMO FUNCIONA:
+- Mantem kernel atualmente rodando
+- Mantem N kernels mais novos (configuravel, padrao: 3)
+- Remove imagens, headers e modulos antigos
+
+ESPACO: Pode liberar 500MB - 2GB por kernel antigo.
+
+RECOMENDADO: Ativar para liberar espaco em /boot."
+
+HELP_STEP_18="Limpeza Disco/Logs
+
+O QUE FAZ:
+Limpa arquivos temporarios, caches e logs antigos.
+
+LOCAIS LIMPOS:
+- /tmp e /var/tmp (arquivos antigos)
+- Caches de miniaturas
+- Cache do APT
+- Logs rotacionados antigos
+- Journal systemd (mantem 7 dias)
+
+RECOMENDADO: Ativar para recuperar espaco em disco."
+
+HELP_STEP_19="Limpeza Docker
+
+O QUE FAZ:
+Remove imagens, containers e volumes Docker/Podman nao usados.
+
+COMO FUNCIONA:
+- Remove containers parados
+- Remove imagens orfas
+- Limpa volumes nao usados
+- Limpa cache de build
+
+PULAR SE: Voce nao usa Docker/Podman.
+
+RECOMENDADO: Ativar se usar containers."
+
+HELP_STEP_20="Sessoes Abandonadas
+
+O QUE FAZ:
+Limpa sessoes de usuario expiradas e arquivos temporarios.
+
+COMO FUNCIONA:
+- Remove arquivos de sessao expirados
+- Limpa sessoes de usuario systemd antigas
+- Remove arquivos de bloqueio obsoletos
+
+RECOMENDADO: Ativar para sistemas multiusuario."
+
+HELP_STEP_21="Verificar Logrotate
+
+O QUE FAZ:
+Valida configuracao do logrotate por erros.
+
+COMO FUNCIONA:
+- Executa logrotate em modo debug
+- Verifica sintaxe de todos os arquivos de config
+- Relata arquivos de log mal configurados
+
+POR QUE IMPORTA:
+Config ruim de logrotate pode encher o disco com logs.
+
+RECOMENDADO: Ativar periodicamente."
+
+HELP_STEP_22="Verificar Inodes
+
+O QUE FAZ:
+Monitora uso de inodes para prevenir esgotamento do filesystem.
+
+COMO FUNCIONA:
+- Verifica porcentagem de uso de inodes por filesystem
+- Avisa se uso excede limite
+- Identifica diretorios com muitos inodes
+
+POR QUE IMPORTA:
+Sem inodes, nao pode criar arquivos mesmo com espaco livre.
+
+RECOMENDADO: Ativar em sistemas com muitos arquivos pequenos."
+
+HELP_STEP_23="Verificar Reinicio
+
+O QUE FAZ:
+Determina se reinicio do sistema e necessario apos atualizacoes.
+
+COMO FUNCIONA:
+- Verifica /var/run/reboot-required
+- Usa needrestart para detectar processos desatualizados
+- Lista servicos que precisam reiniciar
+
+POR QUE IMPORTA:
+Algumas atualizacoes requerem reinicio para efeito completo.
+
+RECOMENDADO: Sempre ativar para se manter informado."

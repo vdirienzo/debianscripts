@@ -1,0 +1,144 @@
+# ============================================================================
+# Conteudo de Ajuda dos Notificadores para autoclean.sh - Portugues
+# ============================================================================
+# Formato: HELP_NOTIF_<CODE> onde CODE e o codigo do notificador (maiusculas)
+
+HELP_NOTIF_DESKTOP="Notificacoes de Desktop (notify-send)
+
+O QUE FAZ:
+Exibe notificacoes do sistema no seu ambiente de desktop.
+
+REQUISITOS:
+- notify-send (pacote libnotify-bin)
+- Servidor de display ativo (X11 ou Wayland)
+- Daemon de notificacoes (incluido na maioria dos desktops)
+
+INSTALACAO:
+  sudo apt install libnotify-bin
+
+COMO FUNCIONA:
+- Detecta automaticamente sua sessao de display
+- Funciona corretamente com sudo
+- Envia para a area de notificacoes do desktop
+
+NOTAS:
+- Funciona apenas em sessoes graficas
+- Nao funciona em SSH ou consoles TTY
+
+NAO PRECISA CONFIGURACAO - apenas ative e funciona!"
+
+HELP_NOTIF_TELEGRAM="Notificacoes via Bot Telegram
+
+O QUE FAZ:
+Envia notificacoes via API do Telegram Bot para usuarios, grupos ou canais.
+
+PASSOS DE CONFIGURACAO:
+
+1. CRIAR UM BOT:
+   - Abra o Telegram, procure @BotFather
+   - Envie /newbot e siga as instrucoes
+   - Copie o token do bot (123456789:ABCdef...)
+
+2. OBTER SEU CHAT ID:
+   Pessoal: Procure @userinfobot, ele mostra seu ID
+   Grupo: Adicione o bot ao grupo, verifique API getUpdates
+   Canal: Adicione bot como admin, use @nomecanal
+
+3. CONFIGURAR:
+   Digite Token do Bot e Chat ID no menu de config
+
+TESTE:
+Use a opcao Test para verificar a configuracao.
+
+SOLUCAO DE PROBLEMAS:
+- Unauthorized: Verifique o token do bot
+- Chat not found: Inicie conversa com o bot primeiro
+- Grupos: O bot deve ser membro
+- Canais: O bot deve ser admin"
+
+HELP_NOTIF_EMAIL="Notificacoes por Email (msmtp)
+
+O QUE FAZ:
+Envia notificacoes por email usando o cliente msmtp.
+
+REQUISITOS:
+- Pacotes msmtp e msmtp-mta
+- Credenciais de conta de email validas
+
+INSTALACAO:
+  sudo apt install msmtp msmtp-mta
+
+CONFIGURACAO:
+1. Email: Seu endereco de email remetente
+2. Servidor SMTP: servidor de email (smtp.gmail.com)
+3. Porta SMTP: Normalmente 587 (TLS) ou 465 (SSL)
+4. Usuario: Seu usuario de email
+5. Senha: Sua senha ou senha de aplicativo
+
+USUARIOS GMAIL:
+- Ative 2FA na sua conta Google
+- Gere Senha de Aplicativo em myaccount.google.com
+- Use a Senha de Aplicativo em vez da normal
+
+TESTE:
+Configure todos os campos, depois use opcao Test."
+
+HELP_NOTIF_NTFY="Notificacoes Push ntfy.sh
+
+O QUE FAZ:
+Envia notificacoes push via servico ntfy.sh para celulares e desktops.
+
+O QUE E NTFY:
+Servico de notificacoes push gratuito e open-source.
+Nao precisa conta para topicos publicos.
+
+CONFIGURACAO:
+1. Instale o app ntfy no seu celular/desktop
+2. Inscreva-se em um topico (qualquer nome unico)
+3. Digite o mesmo nome do topico na config
+
+PARAMETROS:
+- Servidor: ntfy.sh (padrao) ou self-hosted
+- Topico: Seu nome de topico unico
+- Token: Apenas se usar autenticacao
+
+DICAS:
+- Use nomes de topico unicos para evitar spam
+- Self-host para notificacoes privadas
+- Funciona no Android, iOS e desktop
+
+TESTE:
+Inscreva-se no topico primeiro, depois use opcao Test."
+
+HELP_NOTIF_WEBHOOK="Notificacoes via Webhook
+
+O QUE FAZ:
+Envia requisicoes HTTP POST para endpoints webhook personalizados.
+Suporta Discord, Slack, Teams e servicos customizados.
+
+PRESETS DISPONIVEIS:
+- Discord: URL de webhook do Discord
+- Slack: Webhook de entrada do Slack
+- Teams: Conector do Microsoft Teams
+- Custom: Qualquer endpoint HTTP
+
+CONFIGURACAO:
+1. Selecione preset ou use custom
+2. Digite URL do webhook
+3. Opcionalmente customize template JSON
+
+VARIAVEIS DO TEMPLATE JSON:
+- {title}: Titulo da notificacao
+- {message}: Corpo da notificacao
+- {severity}: info/warning/error/success
+- {timestamp}: Timestamp ISO 8601
+- {hostname}: Nome do host
+
+CONFIGURAR DISCORD:
+Configuracoes do Servidor > Integracoes > Webhooks > Novo
+
+CONFIGURAR SLACK:
+Apps > Incoming Webhooks > Adicionar ao canal
+
+TESTE:
+Digite URL do webhook, depois use opcao Test."

@@ -1,0 +1,321 @@
+# ============================================================================
+# Contenuto di Aiuto per autoclean.sh - Italiano
+# ============================================================================
+# Formato: HELP_STEP_N dove N e 1-23
+# Struttura: Titolo, COSA FA, COME FUNZIONA, RACCOMANDATO
+
+HELP_STEP_1="Verificare Connettivita
+
+COSA FA:
+Verifica la connessione internet prima di aggiornamenti e download.
+
+COME FUNZIONA:
+- Ping a server affidabili (8.8.8.8, 1.1.1.1, google.com)
+- Test risoluzione DNS
+- Valida configurazione proxy se impostata
+
+PERCHE E IMPORTANTE:
+Senza connettivita, gli aggiornamenti dei pacchetti falliranno.
+
+RACCOMANDATO: Sempre attivo tranne lavoro offline."
+
+HELP_STEP_2="Verificare Dipendenze
+
+COSA FA:
+Installa strumenti essenziali richiesti da autoclean.sh.
+
+STRUMENTI VERIFICATI:
+- timeshift: Snapshot di sistema per ripristino
+- needrestart: Rileva servizi che necessitano riavvio
+- debsums: Verifica integrita pacchetti
+- smartmontools: Monitoraggio salute disco
+
+RACCOMANDATO: Sempre attivo alla prima esecuzione."
+
+HELP_STEP_3="Verificare Repository APT
+
+COSA FA:
+Scansiona /etc/apt/sources.list per repository problematici.
+
+COME FUNZIONA:
+- Rileva PPA su sistemi non-Ubuntu
+- Trova voci CDROM/DVD obsolete
+- Identifica sorgenti duplicate
+- Avvisa di repo HTTP non sicuri
+
+RACCOMANDATO: Attivare periodicamente per mantenere sorgenti pulite."
+
+HELP_STEP_4="Salute Disco (SMART)
+
+COSA FA:
+Verifica la salute del disco usando tecnologia SMART.
+
+COME FUNZIONA:
+- Legge attributi SMART dai dischi
+- Rileva segni precoci di guasto
+- Riporta temperatura e settori riallocati
+- Avvisa di dischi a rischio
+
+RACCOMANDATO: Attivare se hai HDD o SSD con supporto SMART."
+
+HELP_STEP_5="Integrita Pacchetti (debsums)
+
+COSA FA:
+Verifica che i pacchetti installati non siano stati modificati o corrotti.
+
+COME FUNZIONA:
+- Confronta file installati con checksum dei pacchetti
+- Rileva modifiche non autorizzate
+- Identifica file corrotti
+- Riporta file mancanti
+
+RACCOMANDATO: Attivare periodicamente per audit di sicurezza."
+
+HELP_STEP_6="Verifica Sicurezza
+
+COSA FA:
+Controlla la configurazione di sicurezza del sistema.
+
+VERIFICHE ESEGUITE:
+- Stato firewall UFW e regole
+- Configurazione SSH (login root, auth password)
+- Configurazione unattended-upgrades
+- Stato fail2ban e jail attivi
+
+RACCOMANDATO: Attivare regolarmente per conformita sicurezza."
+
+HELP_STEP_7="Permessi Critici
+
+COSA FA:
+Controlla i permessi su file critici per la sicurezza.
+
+FILE VERIFICATI:
+- /etc/passwd, /etc/shadow, /etc/sudoers
+- File di configurazione SSH
+- Directory cron
+- Conteggio binari SUID/SGID
+
+RACCOMANDATO: Attivare per audit di sicurezza."
+
+HELP_STEP_8="Controllare Servizi
+
+COSA FA:
+Analizza servizi systemd attivi e rileva unita fallite.
+
+COME FUNZIONA:
+- Elenca tutti i servizi attivi
+- Rileva unita systemd fallite
+- Identifica servizi in stato degradato
+- Conta servizi in esecuzione vs totali
+
+RACCOMANDATO: Attivare per mantenere salute del sistema."
+
+HELP_STEP_9="Backup Configurazioni (tar)
+
+COSA FA:
+Crea backup compresso di sorgenti APT e config di sistema.
+
+FILE SALVATI:
+- /etc/apt/sources.list e sources.list.d/
+- /etc/apt/preferences.d/
+- Lista pacchetti (dpkg --get-selections)
+
+POSIZIONE: /var/backups/autoclean/
+
+RACCOMANDATO: Sempre attivare prima di aggiornamenti maggiori."
+
+HELP_STEP_10="Snapshot Timeshift
+
+COSA FA:
+Crea snapshot di sistema con Timeshift per ripristino facile.
+
+COME FUNZIONA:
+- Usa modalita RSYNC (default) o snapshot BTRFS
+- Salva nella posizione di backup configurata
+- Incrementale: solo file modificati occupano spazio
+
+RETE DI SICUREZZA CRITICA. In caso di problemi, ripristino in secondi.
+
+RACCOMANDATO: SEMPRE ATTIVARE prima di upgrade di sistema."
+
+HELP_STEP_11="Aggiornare Repository
+
+COSA FA:
+Aggiorna database pacchetti da tutte le sorgenti configurate.
+
+COME FUNZIONA:
+- Esegue apt update
+- Scarica liste pacchetti aggiornate
+- Verifica errori repository
+- Riporta numero aggiornamenti disponibili
+
+RACCOMANDATO: Sempre attivare prima di upgrade."
+
+HELP_STEP_12="Aggiornare Sistema (APT)
+
+COSA FA:
+Installa aggiornamenti disponibili per tutti i pacchetti.
+
+COME FUNZIONA:
+- Esegue apt upgrade (modalita sicura)
+- Installa patch di sicurezza
+- Aggiorna pacchetti installati
+- Non rimuove mai pacchetti
+
+RACCOMANDATO: Attivare regolarmente per sicurezza."
+
+HELP_STEP_13="Aggiornare Flatpak
+
+COSA FA:
+Aggiorna tutte le applicazioni Flatpak installate.
+
+COME FUNZIONA:
+- Esegue flatpak update
+- Aggiorna app di sistema e utente
+- Scarica aggiornamenti delta quando possibile
+
+SALTARE SE: Non usi applicazioni Flatpak.
+
+RACCOMANDATO: Attivare se hai app Flatpak."
+
+HELP_STEP_14="Aggiornare Snap
+
+COSA FA:
+Aggiorna tutti i pacchetti Snap installati.
+
+COME FUNZIONA:
+- Esegue snap refresh
+- Scarica e installa nuove versioni
+- Mantiene versione precedente per rollback
+
+SALTARE SE: Non usi pacchetti Snap.
+
+RACCOMANDATO: Attivare se hai app Snap."
+
+HELP_STEP_15="Verificare Firmware
+
+COSA FA:
+Cerca aggiornamenti firmware disponibili usando fwupd.
+
+COME FUNZIONA:
+- Interroga servizio fwupd
+- Verifica LVFS per aggiornamenti
+- Elenca dispositivi con aggiornamenti in attesa
+
+NOTA: Richiede servizio fwupd attivo.
+
+RACCOMANDATO: Attivare periodicamente su hardware supportato."
+
+HELP_STEP_16="Pulizia APT
+
+COSA FA:
+Rimuove pacchetti orfani e pulisce cache APT.
+
+COME FUNZIONA:
+- apt autoremove: Rimuove dipendenze non usate
+- apt autoclean: Rimuove file pacchetti obsoleti
+- dpkg --purge: Rimuove config residue
+
+SPAZIO: Tipicamente libera 200MB - 2GB.
+
+RACCOMANDATO: Attivare regolarmente. Operazione sicura."
+
+HELP_STEP_17="Pulizia Kernel
+
+COSA FA:
+Rimuove kernel Linux vecchi mantenendo solo i piu recenti.
+
+COME FUNZIONA:
+- Mantiene kernel attualmente in esecuzione
+- Mantiene N kernel piu recenti (configurabile, default: 3)
+- Rimuove immagini, header, moduli vecchi
+
+SPAZIO: Puo liberare 500MB - 2GB per kernel vecchio.
+
+RACCOMANDATO: Attivare per liberare spazio /boot."
+
+HELP_STEP_18="Pulizia Disco/Log
+
+COSA FA:
+Pulisce file temporanei, cache e log vecchi.
+
+POSIZIONI PULITE:
+- /tmp e /var/tmp (file vecchi)
+- Cache miniature
+- Cache APT
+- Log ruotati vecchi
+- Journal systemd (mantiene 7 giorni)
+
+RACCOMANDATO: Attivare per recuperare spazio disco."
+
+HELP_STEP_19="Pulizia Docker
+
+COSA FA:
+Rimuove immagini, container e volumi Docker/Podman non usati.
+
+COME FUNZIONA:
+- Rimuove container fermati
+- Rimuove immagini orfane
+- Pulisce volumi non usati
+- Pulisce cache di build
+
+SALTARE SE: Non usi Docker/Podman.
+
+RACCOMANDATO: Attivare se usi container."
+
+HELP_STEP_20="Sessioni Abbandonate
+
+COSA FA:
+Pulisce sessioni utente scadute e file temporanei.
+
+COME FUNZIONA:
+- Rimuove file sessione scaduti
+- Pulisce sessioni utente systemd vecchie
+- Rimuove file di blocco obsoleti
+
+RACCOMANDATO: Attivare per sistemi multiutente."
+
+HELP_STEP_21="Verificare Logrotate
+
+COSA FA:
+Valida configurazione logrotate per errori.
+
+COME FUNZIONA:
+- Esegue logrotate in modalita debug
+- Verifica sintassi di tutti i file config
+- Riporta file log mal configurati
+
+PERCHE E IMPORTANTE:
+Config logrotate cattiva puo riempire disco con log.
+
+RACCOMANDATO: Attivare periodicamente."
+
+HELP_STEP_22="Verificare Inode
+
+COSA FA:
+Monitora uso inode per prevenire esaurimento filesystem.
+
+COME FUNZIONA:
+- Verifica percentuale uso inode per filesystem
+- Avvisa se uso supera soglia
+- Identifica directory con molti inode
+
+PERCHE E IMPORTANTE:
+Senza inode, impossibile creare file anche con spazio libero.
+
+RACCOMANDATO: Attivare su sistemi con molti file piccoli."
+
+HELP_STEP_23="Verificare Riavvio
+
+COSA FA:
+Determina se riavvio sistema e necessario dopo aggiornamenti.
+
+COME FUNZIONA:
+- Verifica /var/run/reboot-required
+- Usa needrestart per rilevare processi obsoleti
+- Elenca servizi che necessitano riavvio
+
+PERCHE E IMPORTANTE:
+Alcuni aggiornamenti richiedono riavvio per effetto completo.
+
+RACCOMANDATO: Sempre attivare per rimanere informati."

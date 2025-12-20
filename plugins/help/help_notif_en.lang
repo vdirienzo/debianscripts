@@ -1,0 +1,144 @@
+# ============================================================================
+# Notifier Help Content for autoclean.sh - English
+# ============================================================================
+# Format: HELP_NOTIF_<CODE> where CODE is the notifier code (uppercase)
+
+HELP_NOTIF_DESKTOP="Desktop Notifications (notify-send)
+
+WHAT IT DOES:
+Displays system notifications on your desktop environment.
+
+REQUIREMENTS:
+- notify-send (libnotify-bin package)
+- Running display server (X11 or Wayland)
+- Notification daemon (included in most desktops)
+
+INSTALLATION:
+  sudo apt install libnotify-bin
+
+HOW IT WORKS:
+- Automatically detects your display session
+- Works correctly when running with sudo
+- Sends to your desktop notification area
+
+NOTES:
+- Only works from graphical sessions
+- Won't work in SSH or TTY consoles
+
+NO CONFIGURATION NEEDED - just enable and it works!"
+
+HELP_NOTIF_TELEGRAM="Telegram Bot Notifications
+
+WHAT IT DOES:
+Sends notifications via Telegram Bot API to users, groups, or channels.
+
+SETUP STEPS:
+
+1. CREATE A BOT:
+   - Open Telegram, search @BotFather
+   - Send /newbot and follow prompts
+   - Copy the bot token (123456789:ABCdef...)
+
+2. GET YOUR CHAT ID:
+   Personal: Search @userinfobot, it shows your ID
+   Group: Add bot to group, check getUpdates API
+   Channel: Add bot as admin, use @channelname
+
+3. CONFIGURE:
+   Enter Bot Token and Chat ID in config menu
+
+TESTING:
+Use Test option to verify configuration.
+
+TROUBLESHOOTING:
+- Unauthorized: Check bot token
+- Chat not found: Start conversation with bot first
+- Groups: Bot must be a member
+- Channels: Bot must be admin"
+
+HELP_NOTIF_EMAIL="Email Notifications (msmtp)
+
+WHAT IT DOES:
+Sends email notifications using msmtp mail client.
+
+REQUIREMENTS:
+- msmtp and msmtp-mta packages
+- Valid email account credentials
+
+INSTALLATION:
+  sudo apt install msmtp msmtp-mta
+
+CONFIGURATION:
+1. Email address: Your sender email
+2. SMTP Server: mail server (smtp.gmail.com)
+3. SMTP Port: Usually 587 (TLS) or 465 (SSL)
+4. Username: Your email username
+5. Password: Your email password or app password
+
+GMAIL USERS:
+- Enable 2FA in your Google account
+- Generate App Password at myaccount.google.com
+- Use App Password instead of regular password
+
+TESTING:
+Configure all fields, then use Test option."
+
+HELP_NOTIF_NTFY="ntfy.sh Push Notifications
+
+WHAT IT DOES:
+Sends push notifications via ntfy.sh service to phones and desktops.
+
+WHAT IS NTFY:
+Free, open-source push notification service.
+No account needed for public topics.
+
+SETUP:
+1. Install ntfy app on your phone/desktop
+2. Subscribe to a topic (any unique name)
+3. Enter same topic name in config
+
+CONFIGURATION:
+- Server: ntfy.sh (default) or self-hosted
+- Topic: Your unique topic name
+- Token: Only if using authentication
+
+TIPS:
+- Use unique topic names to avoid spam
+- Self-host for private notifications
+- Works on Android, iOS, and desktop
+
+TESTING:
+Subscribe to topic first, then use Test option."
+
+HELP_NOTIF_WEBHOOK="Webhook Notifications
+
+WHAT IT DOES:
+Sends HTTP POST requests to custom webhook endpoints.
+Supports Discord, Slack, Teams, and custom services.
+
+PRESETS AVAILABLE:
+- Discord: Discord webhook URL
+- Slack: Slack incoming webhook
+- Teams: Microsoft Teams connector
+- Custom: Any HTTP endpoint
+
+CONFIGURATION:
+1. Select preset or use custom
+2. Enter webhook URL
+3. Optionally customize JSON template
+
+JSON TEMPLATE VARIABLES:
+- {title}: Notification title
+- {message}: Notification body
+- {severity}: info/warning/error/success
+- {timestamp}: ISO 8601 timestamp
+- {hostname}: System hostname
+
+DISCORD SETUP:
+Server Settings > Integrations > Webhooks > New
+
+SLACK SETUP:
+Apps > Incoming Webhooks > Add to channel
+
+TESTING:
+Enter webhook URL, then use Test option."

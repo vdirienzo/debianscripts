@@ -1,0 +1,144 @@
+# ============================================================================
+# Contenido de Ayuda de Notificadores para autoclean.sh - Espanol
+# ============================================================================
+# Formato: HELP_NOTIF_<CODE> donde CODE es el codigo del notificador (mayusculas)
+
+HELP_NOTIF_DESKTOP="Notificaciones de Escritorio (notify-send)
+
+QUE HACE:
+Muestra notificaciones del sistema en tu entorno de escritorio.
+
+REQUISITOS:
+- notify-send (paquete libnotify-bin)
+- Servidor de pantalla activo (X11 o Wayland)
+- Demonio de notificaciones (incluido en la mayoria)
+
+INSTALACION:
+  sudo apt install libnotify-bin
+
+COMO FUNCIONA:
+- Detecta automaticamente tu sesion de pantalla
+- Funciona correctamente con sudo
+- Envia al area de notificaciones del escritorio
+
+NOTAS:
+- Solo funciona desde sesiones graficas
+- No funciona en SSH o consolas TTY
+
+NO REQUIERE CONFIGURACION - solo activa y funciona!"
+
+HELP_NOTIF_TELEGRAM="Notificaciones via Bot de Telegram
+
+QUE HACE:
+Envia notificaciones via API de Telegram Bot a usuarios, grupos o canales.
+
+PASOS DE CONFIGURACION:
+
+1. CREAR UN BOT:
+   - Abre Telegram, busca @BotFather
+   - Envia /newbot y sigue las instrucciones
+   - Copia el token del bot (123456789:ABCdef...)
+
+2. OBTENER TU CHAT ID:
+   Personal: Busca @userinfobot, te muestra tu ID
+   Grupo: Agrega el bot al grupo, revisa API getUpdates
+   Canal: Agrega bot como admin, usa @nombrecanal
+
+3. CONFIGURAR:
+   Ingresa Token del Bot y Chat ID en el menu
+
+PRUEBA:
+Usa la opcion Test para verificar la configuracion.
+
+SOLUCION DE PROBLEMAS:
+- Unauthorized: Verifica el token del bot
+- Chat not found: Inicia conversacion con el bot primero
+- Grupos: El bot debe ser miembro
+- Canales: El bot debe ser administrador"
+
+HELP_NOTIF_EMAIL="Notificaciones por Email (msmtp)
+
+QUE HACE:
+Envia notificaciones por email usando el cliente msmtp.
+
+REQUISITOS:
+- Paquetes msmtp y msmtp-mta
+- Credenciales de cuenta de email validas
+
+INSTALACION:
+  sudo apt install msmtp msmtp-mta
+
+CONFIGURACION:
+1. Email: Tu direccion de correo remitente
+2. Servidor SMTP: servidor de correo (smtp.gmail.com)
+3. Puerto SMTP: Normalmente 587 (TLS) o 465 (SSL)
+4. Usuario: Tu usuario de email
+5. Contrasena: Tu contrasena o contrasena de aplicacion
+
+USUARIOS DE GMAIL:
+- Activa 2FA en tu cuenta de Google
+- Genera Contrasena de Aplicacion en myaccount.google.com
+- Usa la Contrasena de Aplicacion en lugar de la normal
+
+PRUEBA:
+Configura todos los campos, luego usa opcion Test."
+
+HELP_NOTIF_NTFY="Notificaciones Push ntfy.sh
+
+QUE HACE:
+Envia notificaciones push via servicio ntfy.sh a telefonos y escritorios.
+
+QUE ES NTFY:
+Servicio de notificaciones push gratuito y open-source.
+No necesita cuenta para topics publicos.
+
+CONFIGURACION:
+1. Instala app ntfy en tu telefono/escritorio
+2. Suscribete a un topic (cualquier nombre unico)
+3. Ingresa el mismo nombre de topic en config
+
+PARAMETROS:
+- Servidor: ntfy.sh (default) o self-hosted
+- Topic: Tu nombre de topic unico
+- Token: Solo si usas autenticacion
+
+CONSEJOS:
+- Usa nombres de topic unicos para evitar spam
+- Self-host para notificaciones privadas
+- Funciona en Android, iOS y escritorio
+
+PRUEBA:
+Suscribete al topic primero, luego usa opcion Test."
+
+HELP_NOTIF_WEBHOOK="Notificaciones via Webhook
+
+QUE HACE:
+Envia peticiones HTTP POST a endpoints webhook personalizados.
+Soporta Discord, Slack, Teams y servicios custom.
+
+PRESETS DISPONIBLES:
+- Discord: URL de webhook de Discord
+- Slack: Webhook entrante de Slack
+- Teams: Conector de Microsoft Teams
+- Custom: Cualquier endpoint HTTP
+
+CONFIGURACION:
+1. Selecciona preset o usa custom
+2. Ingresa URL del webhook
+3. Opcionalmente personaliza plantilla JSON
+
+VARIABLES DE PLANTILLA JSON:
+- {title}: Titulo de la notificacion
+- {message}: Cuerpo de la notificacion
+- {severity}: info/warning/error/success
+- {timestamp}: Timestamp ISO 8601
+- {hostname}: Nombre del host
+
+CONFIGURAR DISCORD:
+Ajustes del Servidor > Integraciones > Webhooks > Nuevo
+
+CONFIGURAR SLACK:
+Apps > Incoming Webhooks > Agregar al canal
+
+PRUEBA:
+Ingresa URL del webhook, luego usa opcion Test."

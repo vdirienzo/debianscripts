@@ -1,0 +1,334 @@
+# ============================================================================
+# Help Content for autoclean.sh - English
+# ============================================================================
+# Format: HELP_STEP_N where N is 1-23
+# Structure: Title, WHAT IT DOES, HOW IT WORKS, RECOMMENDED
+
+HELP_STEP_1="Check Connectivity
+
+WHAT IT DOES:
+Verifies internet connection before proceeding with updates and downloads.
+
+HOW IT WORKS:
+- Pings reliable servers (8.8.8.8, 1.1.1.1, google.com)
+- Tests DNS resolution
+- Validates proxy configuration if set
+
+WHY IT MATTERS:
+Without connectivity, package updates will fail. This prevents wasted time.
+
+RECOMMENDED: Always enabled unless working offline."
+
+HELP_STEP_2="Check Dependencies
+
+WHAT IT DOES:
+Installs essential tools required by autoclean.sh if missing.
+
+TOOLS VERIFIED:
+- timeshift: System snapshots for rollback
+- needrestart: Detects services needing restart
+- debsums: Package integrity verification
+- smartmontools: Disk health monitoring
+
+RECOMMENDED: Always enabled on first run."
+
+HELP_STEP_3="Check APT Repositories
+
+WHAT IT DOES:
+Scans /etc/apt/sources.list for problematic or deprecated repositories.
+
+HOW IT WORKS:
+- Detects PPA on non-Ubuntu systems
+- Finds deprecated CDROMs/DVDs entries
+- Identifies duplicate sources
+- Warns about insecure HTTP repos
+
+RECOMMENDED: Enable periodically to keep sources clean."
+
+HELP_STEP_4="Disk Health (SMART)
+
+WHAT IT DOES:
+Checks hard drive health using SMART technology.
+
+HOW IT WORKS:
+- Reads SMART attributes from drives
+- Detects early signs of disk failure
+- Reports temperature and reallocated sectors
+- Warns about drives at risk
+
+WHY IT MATTERS:
+Early detection can prevent data loss from failing drives.
+
+RECOMMENDED: Enable if you have HDDs or SSDs with SMART support."
+
+HELP_STEP_5="Package Integrity (debsums)
+
+WHAT IT DOES:
+Verifies that installed packages haven't been modified or corrupted.
+
+HOW IT WORKS:
+- Compares installed files against package checksums
+- Detects unauthorized modifications
+- Identifies corrupted files
+- Reports missing files
+
+WHY IT MATTERS:
+Detects potential security compromises or filesystem corruption.
+
+RECOMMENDED: Enable periodically for security auditing."
+
+HELP_STEP_6="Security Updates Check
+
+WHAT IT DOES:
+Audits system security configuration and hardening status.
+
+CHECKS PERFORMED:
+- UFW firewall status and rules
+- SSH configuration (root login, password auth)
+- Unattended-upgrades configuration
+- fail2ban status and active jails
+
+RECOMMENDED: Enable regularly for security compliance."
+
+HELP_STEP_7="Critical Permissions
+
+WHAT IT DOES:
+Audits permissions on security-critical files and directories.
+
+FILES CHECKED:
+- /etc/passwd, /etc/shadow, /etc/sudoers
+- SSH configuration files
+- Cron directories
+- SUID/SGID binaries count
+
+WHY IT MATTERS:
+Wrong permissions can create security vulnerabilities.
+
+RECOMMENDED: Enable for security auditing."
+
+HELP_STEP_8="Audit Services
+
+WHAT IT DOES:
+Analyzes active systemd services and detects failed units.
+
+HOW IT WORKS:
+- Lists all active services
+- Detects failed systemd units
+- Identifies services in degraded state
+- Counts running vs total services
+
+RECOMMENDED: Enable to maintain system health."
+
+HELP_STEP_9="Backup Configurations (tar)
+
+WHAT IT DOES:
+Creates a compressed backup of APT sources and system configs.
+
+FILES BACKED UP:
+- /etc/apt/sources.list and sources.list.d/
+- /etc/apt/preferences.d/
+- Package list (dpkg --get-selections)
+
+BACKUP LOCATION: /var/backups/autoclean/
+
+RECOMMENDED: Always enable before major updates."
+
+HELP_STEP_10="Timeshift Snapshot
+
+WHAT IT DOES:
+Creates a system snapshot using Timeshift for easy rollback.
+
+HOW IT WORKS:
+- Uses RSYNC mode (default) or BTRFS snapshots
+- Saves to configured backup location
+- Incremental: only changed files consume space
+
+WHY IT MATTERS:
+CRITICAL SAFETY NET. If updates break something, you can restore in seconds.
+
+RECOMMENDED: ALWAYS ENABLE before system upgrades."
+
+HELP_STEP_11="Update Repositories
+
+WHAT IT DOES:
+Refreshes the package database from all configured sources.
+
+HOW IT WORKS:
+- Runs apt update
+- Downloads latest package lists
+- Checks for repository errors
+- Reports available updates count
+
+RECOMMENDED: Always enable before upgrades."
+
+HELP_STEP_12="Update System (APT)
+
+WHAT IT DOES:
+Installs available updates for all packages.
+
+HOW IT WORKS:
+- Runs apt upgrade (safe mode)
+- Installs security patches
+- Updates installed packages
+- Never removes packages
+
+WHY IT MATTERS:
+Keeps system secure and up-to-date.
+
+RECOMMENDED: Enable regularly for security."
+
+HELP_STEP_13="Update Flatpak
+
+WHAT IT DOES:
+Updates all installed Flatpak applications.
+
+HOW IT WORKS:
+- Runs flatpak update
+- Updates both system and user apps
+- Downloads delta updates when possible
+
+SKIP IF: You don't use Flatpak applications.
+
+RECOMMENDED: Enable if you have Flatpak apps."
+
+HELP_STEP_14="Update Snap
+
+WHAT IT DOES:
+Updates all installed Snap packages.
+
+HOW IT WORKS:
+- Runs snap refresh
+- Downloads and installs new versions
+- Keeps previous version as rollback
+
+SKIP IF: You don't use Snap packages.
+
+RECOMMENDED: Enable if you have Snap apps."
+
+HELP_STEP_15="Check Firmware
+
+WHAT IT DOES:
+Checks for available firmware updates using fwupd.
+
+HOW IT WORKS:
+- Queries fwupd service
+- Checks LVFS for updates
+- Lists devices with pending updates
+
+NOTE: Requires fwupd service running.
+
+RECOMMENDED: Enable periodically on supported hardware."
+
+HELP_STEP_16="APT Cleanup
+
+WHAT IT DOES:
+Removes orphaned packages and cleans APT cache.
+
+HOW IT WORKS:
+- apt autoremove: Removes unused dependencies
+- apt autoclean: Removes obsolete package files
+- dpkg --purge: Removes residual configs
+
+DISK SPACE: Typically frees 200MB - 2GB.
+
+RECOMMENDED: Enable regularly. Safe operation."
+
+HELP_STEP_17="Kernel Cleanup
+
+WHAT IT DOES:
+Removes old Linux kernels keeping only the most recent ones.
+
+HOW IT WORKS:
+- Keeps current running kernel
+- Keeps N newest kernels (configurable, default: 3)
+- Removes old kernel images, headers, modules
+
+DISK SPACE: Can free 500MB - 2GB per old kernel.
+
+RECOMMENDED: Enable to free /boot space."
+
+HELP_STEP_18="Disk/Logs Cleanup
+
+WHAT IT DOES:
+Cleans temporary files, caches, and old logs.
+
+LOCATIONS CLEANED:
+- /tmp and /var/tmp (old files)
+- Thumbnail caches
+- APT cache
+- Old rotated logs
+- Systemd journal (keeps 7 days)
+
+RECOMMENDED: Enable for disk space recovery."
+
+HELP_STEP_19="Docker Cleanup
+
+WHAT IT DOES:
+Removes unused Docker/Podman images, containers, and volumes.
+
+HOW IT WORKS:
+- Removes stopped containers
+- Removes dangling images
+- Prunes unused volumes
+- Cleans build cache
+
+SKIP IF: You don't use Docker/Podman.
+
+RECOMMENDED: Enable if using containers."
+
+HELP_STEP_20="Abandoned Sessions
+
+WHAT IT DOES:
+Cleans up expired user sessions and temporary files.
+
+HOW IT WORKS:
+- Removes expired session files
+- Cleans old systemd user sessions
+- Removes stale lock files
+
+RECOMMENDED: Enable for multi-user systems."
+
+HELP_STEP_21="Check Logrotate
+
+WHAT IT DOES:
+Validates logrotate configuration for errors.
+
+HOW IT WORKS:
+- Runs logrotate in debug mode
+- Checks all config files syntax
+- Reports misconfigured log files
+
+WHY IT MATTERS:
+Bad logrotate config can fill disk with unrotated logs.
+
+RECOMMENDED: Enable periodically."
+
+HELP_STEP_22="Check Inodes
+
+WHAT IT DOES:
+Monitors inode usage to prevent filesystem exhaustion.
+
+HOW IT WORKS:
+- Checks inode usage percentage per filesystem
+- Warns if usage exceeds threshold
+- Identifies high-inode directories
+
+WHY IT MATTERS:
+Running out of inodes prevents creating new files even with free space.
+
+RECOMMENDED: Enable on systems with many small files."
+
+HELP_STEP_23="Check Reboot
+
+WHAT IT DOES:
+Determines if system reboot is required after updates.
+
+HOW IT WORKS:
+- Checks /var/run/reboot-required
+- Uses needrestart to detect outdated processes
+- Lists services needing restart
+
+WHY IT MATTERS:
+Some updates require reboot to take full effect.
+
+RECOMMENDED: Always enable to stay informed."

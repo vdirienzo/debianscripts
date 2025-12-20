@@ -369,7 +369,8 @@ When running the script without arguments, a 4x6 grid interactive menu is displa
 ╠════════════════════════════════════════════════════════════════════════════╣
 ║ Selected: 21/23    Profile: Saved                                          ║
 ╠════════════════════════════════════════════════════════════════════════════╣
-║       [ENTER] Execute [G] Save [L] Language [T] Theme [O] Notif [Q] Quit   ║
+║          [ENTER] Execute [H] Help [G] Save [Q] Quit                        ║
+║          [S] Sel/Desel [L] Language [T] Theme [O] Notif                    ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 ```
 
@@ -381,18 +382,14 @@ When running the script without arguments, a 4x6 grid interactive menu is displa
 | ↑ / ↓ | Navigate within column |
 | SPACE | Enable/disable selected step |
 | ENTER | Execute with current configuration |
+| H | Show help for selected step |
 | G | Save current configuration |
 | D | Delete saved configuration |
 | L | Language selector |
 | T | Theme selector |
 | O | Notifications menu |
+| S | Toggle select/deselect all (press twice to toggle) |
 | Q | Exit without executing |
-
-**Hidden shortcuts** (not shown in interface):
-| Key | Action |
-|-----|--------|
-| A | Enable all steps |
-| N | Disable all steps |
 
 ### Persistent Configuration
 
@@ -424,6 +421,40 @@ To execute the script using this custom configuration:
 ```bash
 sudo ./autoclean.sh --profile custom
 ```
+
+### Contextual Help System
+
+Press **H** on any step to display detailed help information in a scrollable window:
+
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                         HELP: Connectivity                                 ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║  Check Connectivity                                                        ║
+║                                                                            ║
+║  WHAT IT DOES:                                                             ║
+║  Verifies internet connection before proceeding with updates.              ║
+║                                                                            ║
+║  HOW IT WORKS:                                                             ║
+║  - Pings reliable servers (8.8.8.8, 1.1.1.1, google.com)                   ║
+║  - Tests DNS resolution                                                    ║
+║  - Validates proxy configuration if set                                    ║
+║                                                                            ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                        Use ↑↓ to scroll                                    ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                    [ESC] Close    [Q] Close                                ║
+╚════════════════════════════════════════════════════════════════════════════╝
+```
+
+**Help features:**
+- 12-line scrollable window with ↑/↓ navigation
+- Multi-language support (same languages as UI)
+- Help files located in `plugins/help/`
+- Easy to extend with additional languages
+- **Automatic English fallback**: If help is not available in the selected language, English is shown
+
+**Notifier help:** Press **H** in the notifications menu to see help for each notifier. Help is also multi-language with English fallback.
 
 ---
 
@@ -726,6 +757,11 @@ This project is under free license. Feel free to use, modify, and distribute acc
 ---
 
 ## Changelog v2025.12
+
+### New Features (December 2025 - Latest)
+- **Toggle select/deselect all** (`[S]`) - Press S to toggle all steps on/off (replaces A/N)
+- **Multi-language notifier help** - Help for notifiers now supports all 6 languages with English fallback
+- **Help files for notifiers** - New `plugins/help/help_notif_*.lang` files for each language
 
 ### New Features (December 2025 - Update)
 - **8 new security and maintenance steps** - Expansion from 15 to 23 modular steps

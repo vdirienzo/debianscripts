@@ -1,9 +1,9 @@
 # ============================================================================
 # Autoclean Notifier Plugin: Email via SMTP
 # ============================================================================
-# Envia notificaciones por email usando curl con SMTP directo
-# Soporta Gmail, Outlook, Yahoo y cualquier servidor SMTP
-# No requiere dependencias adicionales (solo curl)
+# Sends email notifications using curl with direct SMTP
+# Supports Gmail, Outlook, Yahoo and any SMTP server
+# No additional dependencies required (only curl)
 # ============================================================================
 
 # === METADATA ===
@@ -12,7 +12,7 @@ NOTIFIER_CODE="email"
 NOTIFIER_DESCRIPTION="Email via SMTP (Gmail, Outlook, custom)"
 NOTIFIER_DEPS="curl"
 
-# === CONFIGURACION ===
+# === CONFIGURATION ===
 declare -A NOTIFIER_FIELDS=(
     ["NOTIFIER_EMAIL_TO"]="Recipient email"
     ["NOTIFIER_EMAIL_FROM"]="Sender email"
@@ -22,7 +22,7 @@ declare -A NOTIFIER_FIELDS=(
     ["NOTIFIER_EMAIL_PASSWORD"]="SMTP password"
 )
 
-# === FUNCIONES ===
+# === FUNCTIONS ===
 
 notifier_check_deps() {
     command -v curl &>/dev/null
@@ -42,7 +42,7 @@ notifier_send() {
     local message="$2"
     local severity="${3:-info}"
 
-    # Mapear severidad a prefijo de subject
+    # Map severity to subject prefix
     local prefix=""
     case "$severity" in
         critical) prefix="[CRITICAL]" ;;
@@ -60,17 +60,17 @@ notifier_send() {
     local user="$NOTIFIER_EMAIL_USER"
     local password="$NOTIFIER_EMAIL_PASSWORD"
 
-    # Determinar protocolo segun puerto
+    # Determine protocol based on port
     local protocol="smtp"
     if [[ "$port" == "465" ]]; then
         protocol="smtps"
     fi
 
-    # Generar fecha RFC 2822
+    # Generate RFC 2822 date
     local date_header
     date_header=$(date -R 2>/dev/null || date "+%a, %d %b %Y %H:%M:%S %z")
 
-    # Construir email con headers
+    # Build email with headers
     local email_content
     email_content=$(cat <<EOF
 From: ${from}
@@ -85,7 +85,7 @@ ${message}
 EOF
 )
 
-    # Enviar via curl SMTP
+    # Send via curl SMTP
     local result
     result=$(echo "$email_content" | curl -s \
         --url "${protocol}://${server}:${port}" \

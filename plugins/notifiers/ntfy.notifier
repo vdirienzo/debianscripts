@@ -1,8 +1,8 @@
 # ============================================================================
 # Autoclean Notifier Plugin: ntfy.sh
 # ============================================================================
-# Envia notificaciones push via ntfy.sh (servidor publico o self-hosted)
-# Servicio simple y gratuito: https://ntfy.sh
+# Sends push notifications via ntfy.sh (public or self-hosted server)
+# Simple and free service: https://ntfy.sh
 # ============================================================================
 
 # === METADATA ===
@@ -11,14 +11,14 @@ NOTIFIER_CODE="ntfy"
 NOTIFIER_DESCRIPTION="Push notifications via ntfy.sh"
 NOTIFIER_DEPS="curl"
 
-# === CONFIGURACION ===
+# === CONFIGURATION ===
 declare -A NOTIFIER_FIELDS=(
     ["NOTIFIER_NTFY_TOPIC"]="Topic name (required)"
     ["NOTIFIER_NTFY_SERVER"]="Server URL (default: ntfy.sh)"
     ["NOTIFIER_NTFY_TOKEN"]="Access token (optional)"
 )
 
-# === FUNCIONES ===
+# === FUNCTIONS ===
 
 notifier_check_deps() {
     command -v curl &>/dev/null
@@ -33,13 +33,13 @@ notifier_send() {
     local message="$2"
     local severity="${3:-info}"
 
-    # Servidor por defecto
+    # Default server
     local server="${NOTIFIER_NTFY_SERVER:-https://ntfy.sh}"
 
-    # Remover trailing slash si existe
+    # Remove trailing slash if exists
     server="${server%/}"
 
-    # Mapear severidad a prioridad ntfy (1=min, 5=max)
+    # Map severity to ntfy priority (1=min, 5=max)
     local priority=""
     local tags=""
     case "$severity" in
@@ -65,13 +65,13 @@ notifier_send() {
             ;;
     esac
 
-    # Construir headers
+    # Build headers
     local auth_header=""
     if [[ -n "$NOTIFIER_NTFY_TOKEN" ]]; then
         auth_header="-H \"Authorization: Bearer ${NOTIFIER_NTFY_TOKEN}\""
     fi
 
-    # Enviar via ntfy
+    # Send via ntfy
     local response
     local http_code
     http_code=$(curl -s -o /dev/null -w "%{http_code}" \
@@ -85,7 +85,7 @@ notifier_send() {
         --max-time 30 \
         2>/dev/null)
 
-    # Verificar respuesta (2xx = exito)
+    # Verify response (2xx = success)
     if [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
         return 0
     else

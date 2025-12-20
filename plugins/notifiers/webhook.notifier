@@ -1,8 +1,8 @@
 # ============================================================================
 # Autoclean Notifier Plugin: Generic Webhook
 # ============================================================================
-# Envia notificaciones via HTTP webhooks a cualquier servicio
-# Soporta presets para Slack, Discord, Microsoft Teams y JSON generico
+# Sends notifications via HTTP webhooks to any service
+# Supports presets for Slack, Discord, Microsoft Teams and generic JSON
 # ============================================================================
 
 # === METADATA ===
@@ -11,7 +11,7 @@ NOTIFIER_CODE="webhook"
 NOTIFIER_DESCRIPTION="HTTP webhooks (Slack, Discord, Teams, custom)"
 NOTIFIER_DEPS="curl"
 
-# === CONFIGURACION ===
+# === CONFIGURATION ===
 declare -A NOTIFIER_FIELDS=(
     ["NOTIFIER_WEBHOOK_URL"]="Webhook URL (required)"
     ["NOTIFIER_WEBHOOK_PRESET"]="Preset: generic, slack, discord, teams"
@@ -20,9 +20,9 @@ declare -A NOTIFIER_FIELDS=(
     ["NOTIFIER_WEBHOOK_CONTENT_TYPE"]="Content-Type (default: application/json)"
 )
 
-# === FUNCIONES AUXILIARES ===
+# === HELPER FUNCTIONS ===
 
-# Escapar caracteres especiales para JSON
+# Escape special characters for JSON
 _webhook_json_escape() {
     local str="$1"
     str="${str//\\/\\\\}"      # backslash
@@ -33,25 +33,25 @@ _webhook_json_escape() {
     echo "$str"
 }
 
-# Mapear severidad a color hex
+# Map severity to hex color
 _webhook_severity_color() {
     local severity="$1"
     case "$severity" in
-        critical) echo "d63031" ;;  # rojo
-        error)    echo "e74c3c" ;;  # rojo claro
-        warning)  echo "f39c12" ;;  # naranja
-        success)  echo "27ae60" ;;  # verde
-        *)        echo "3498db" ;;  # azul (info)
+        critical) echo "d63031" ;;  # red
+        error)    echo "e74c3c" ;;  # light red
+        warning)  echo "f39c12" ;;  # orange
+        success)  echo "27ae60" ;;  # green
+        *)        echo "3498db" ;;  # blue (info)
     esac
 }
 
-# Mapear severidad a color decimal (para Discord)
+# Map severity to decimal color (for Discord)
 _webhook_severity_color_decimal() {
     local hex=$(_webhook_severity_color "$1")
     echo $((16#$hex))
 }
 
-# Mapear severidad a emoji
+# Map severity to emoji
 _webhook_severity_emoji() {
     local severity="$1"
     case "$severity" in
@@ -63,9 +63,9 @@ _webhook_severity_emoji() {
     esac
 }
 
-# === GENERADORES DE PAYLOAD ===
+# === PAYLOAD GENERATORS ===
 
-# Payload JSON generico (n8n, Zapier, custom APIs)
+# Generic JSON payload (n8n, Zapier, custom APIs)
 _webhook_payload_generic() {
     local title="$1"
     local message="$2"
@@ -181,7 +181,7 @@ _webhook_payload_teams() {
 EOF
 }
 
-# === FUNCIONES REQUERIDAS ===
+# === REQUIRED FUNCTIONS ===
 
 notifier_check_deps() {
     command -v curl &>/dev/null
@@ -196,35 +196,35 @@ notifier_send() {
     local message="$2"
     local severity="${3:-info}"
 
-    # SECURITY: Validar URL antes de usarla
-    # Solo permitir http:// o https:// seguido de caracteres válidos de URL
+    # SECURITY: Validate URL before using it
+    # Only allow http:// or https:// followed by valid URL characters
     if [[ ! "$NOTIFIER_WEBHOOK_URL" =~ ^https?://[a-zA-Z0-9._:/@%?=\&\#+-]+$ ]]; then
         echo "ERROR: Invalid webhook URL format" >&2
         return 1
     fi
 
-    # Valores por defecto con whitelist
+    # Default values with whitelist
     local method="${NOTIFIER_WEBHOOK_METHOD:-POST}"
-    # SECURITY: Validar método HTTP (whitelist)
+    # SECURITY: Validate HTTP method (whitelist)
     case "$method" in
-        GET|POST|PUT|PATCH) ;;  # métodos permitidos
-        *) method="POST" ;;      # fallback seguro
+        GET|POST|PUT|PATCH) ;;  # allowed methods
+        *) method="POST" ;;      # safe fallback
     esac
 
     local preset="${NOTIFIER_WEBHOOK_PRESET:-generic}"
-    # SECURITY: Validar preset (whitelist)
+    # SECURITY: Validate preset (whitelist)
     case "$preset" in
         generic|slack|discord|teams) ;;
         *) preset="generic" ;;
     esac
 
     local content_type="${NOTIFIER_WEBHOOK_CONTENT_TYPE:-application/json}"
-    # SECURITY: Validar content-type (solo caracteres seguros)
+    # SECURITY: Validate content-type (only safe characters)
     if [[ ! "$content_type" =~ ^[a-zA-Z0-9/+.-]+$ ]]; then
         content_type="application/json"
     fi
 
-    # Generar payload segun preset
+    # Generate payload based on preset
     local payload=""
     case "$preset" in
         slack)   payload=$(_webhook_payload_slack "$title" "$message" "$severity") ;;
@@ -233,7 +233,7 @@ notifier_send() {
         *)       payload=$(_webhook_payload_generic "$title" "$message" "$severity") ;;
     esac
 
-    # Construir comando curl
+    # Build curl command
     local curl_args=(
         -s
         -o /dev/null
@@ -244,9 +244,9 @@ notifier_send() {
         --max-time 30
     )
 
-    # SECURITY: Agregar header de autenticacion si existe (validar formato)
+    # SECURITY: Add authentication header if exists (validate format)
     if [[ -n "$NOTIFIER_WEBHOOK_AUTH_HEADER" ]]; then
-        # Solo permitir formato "Header-Name: value" sin caracteres peligrosos
+        # Only allow format "Header-Name: value" without dangerous characters
         if [[ "$NOTIFIER_WEBHOOK_AUTH_HEADER" =~ ^[A-Za-z][A-Za-z0-9_-]*:[[:space:]].+$ ]]; then
             curl_args+=(-H "$NOTIFIER_WEBHOOK_AUTH_HEADER")
         else
@@ -254,11 +254,11 @@ notifier_send() {
         fi
     fi
 
-    # Enviar request
+    # Send request
     local http_code
     http_code=$(curl "${curl_args[@]}" -d "$payload" "$NOTIFIER_WEBHOOK_URL" 2>/dev/null)
 
-    # Verificar respuesta (2xx = exito)
+    # Verify response (2xx = success)
     if [[ "$http_code" =~ ^2[0-9][0-9]$ ]]; then
         return 0
     else

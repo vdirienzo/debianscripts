@@ -1,32 +1,32 @@
 # ============================================================================
 # Autoclean Notifier Plugin: Desktop (notify-send)
 # ============================================================================
-# El notificador mas simple - usa notify-send para notificaciones de escritorio
-# No requiere configuracion adicional
+# The simplest notifier - uses notify-send for desktop notifications
+# No additional configuration required
 # ============================================================================
 
 # === METADATA ===
 NOTIFIER_NAME="Desktop"
 NOTIFIER_CODE="desktop"
-NOTIFIER_DESCRIPTION="Notificaciones de escritorio via notify-send"
+NOTIFIER_DESCRIPTION="Desktop notifications via notify-send"
 NOTIFIER_DEPS="notify-send"
 
-# === CONFIGURACION ===
-# Este notificador no requiere configuracion
+# === CONFIGURATION ===
+# This notifier does not require configuration
 declare -A NOTIFIER_FIELDS=()
 
-# === FUNCIONES ===
+# === FUNCTIONS ===
 
-# Detectar display del usuario real (para cuando se ejecuta con sudo)
+# Detect real user's display (for when running with sudo)
 _detect_user_display() {
-    # Si ya tenemos DISPLAY, usarlo
+    # If we already have DISPLAY, use it
     if [ -n "$DISPLAY" ]; then
         echo "$DISPLAY"
         return 0
     fi
-    # Buscar display del usuario que ejecuto sudo
+    # Find display of the user who ran sudo
     if [ -n "$SUDO_USER" ]; then
-        # Intentar obtener el display del usuario
+        # Try to get user's display
         local user_display
         user_display=$(who 2>/dev/null | grep "$SUDO_USER" | grep -oE '\(:[0-9]+\)' | head -1 | tr -d '()')
         if [ -n "$user_display" ]; then
@@ -34,12 +34,12 @@ _detect_user_display() {
             return 0
         fi
     fi
-    # Default a :0
+    # Default to :0
     echo ":0"
 }
 
 notifier_check_deps() {
-    # Verificar que notify-send esta disponible
+    # Verify that notify-send is available
     if ! command -v notify-send &>/dev/null; then
         return 1
     fi
@@ -47,7 +47,7 @@ notifier_check_deps() {
 }
 
 notifier_is_configured() {
-    # Desktop no requiere configuracion, solo deps
+    # Desktop does not require configuration, only deps
     notifier_check_deps
 }
 
@@ -56,7 +56,7 @@ notifier_send() {
     local message="$2"
     local severity="${3:-info}"
 
-    # Mapear severidad a urgencia de notify-send
+    # Map severity to notify-send urgency
     local urgency="normal"
     local icon="dialog-information"
 
@@ -79,11 +79,11 @@ notifier_send() {
             ;;
     esac
 
-    # Detectar display
+    # Detect display
     local user_display
     user_display=$(_detect_user_display)
 
-    # Si estamos como root via sudo, ejecutar como el usuario original
+    # If we are root via sudo, run as original user
     if [ -n "$SUDO_USER" ]; then
         local user_id
         user_id=$(id -u "$SUDO_USER" 2>/dev/null)
@@ -92,7 +92,7 @@ notifier_send() {
         return $?
     fi
 
-    # Ejecucion normal (no sudo)
+    # Normal execution (no sudo)
     DISPLAY="$user_display" notify-send "$title" "$message" -u "$urgency" -i "$icon" 2>/dev/null
     return $?
 }

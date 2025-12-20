@@ -1,23 +1,23 @@
 # ============================================================================
 # Autoclean Notifier Plugin: Telegram Bot
 # ============================================================================
-# Envia notificaciones via Telegram Bot API
-# Requiere crear un bot con @BotFather y obtener el chat_id
+# Sends notifications via Telegram Bot API
+# Requires creating a bot with @BotFather and getting the chat_id
 # ============================================================================
 
 # === METADATA ===
 NOTIFIER_NAME="Telegram"
 NOTIFIER_CODE="telegram"
-NOTIFIER_DESCRIPTION="Notificaciones via Telegram Bot API"
+NOTIFIER_DESCRIPTION="Notifications via Telegram Bot API"
 NOTIFIER_DEPS="curl"
 
-# === CONFIGURACION ===
+# === CONFIGURATION ===
 declare -A NOTIFIER_FIELDS=(
     ["NOTIFIER_TELEGRAM_BOT_TOKEN"]="Bot token (from @BotFather)"
     ["NOTIFIER_TELEGRAM_CHAT_ID"]="Chat ID (user, group, or channel)"
 )
 
-# === FUNCIONES ===
+# === FUNCTIONS ===
 
 notifier_check_deps() {
     command -v curl &>/dev/null
@@ -32,7 +32,7 @@ notifier_send() {
     local message="$2"
     local severity="${3:-info}"
 
-    # Agregar emoji segun severidad
+    # Add emoji based on severity
     local emoji=""
     case "$severity" in
         critical) emoji="🚨" ;;
@@ -42,12 +42,12 @@ notifier_send() {
         *)        emoji="ℹ️" ;;
     esac
 
-    # Construir mensaje (sin Markdown para evitar problemas con caracteres especiales)
+    # Build message (without Markdown to avoid issues with special characters)
     local full_message="${emoji} ${title}
 
 ${message}"
 
-    # Enviar via API de Telegram (sin parse_mode para texto plano con emojis)
+    # Send via Telegram API (without parse_mode for plain text with emojis)
     local response
     response=$(curl -s -X POST \
         "https://api.telegram.org/bot${NOTIFIER_TELEGRAM_BOT_TOKEN}/sendMessage" \
@@ -57,7 +57,7 @@ ${message}"
         --max-time 30 \
         2>/dev/null)
 
-    # Verificar respuesta
+    # Verify response
     if echo "$response" | grep -q '"ok":true'; then
         return 0
     else

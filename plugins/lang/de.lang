@@ -88,6 +88,7 @@ MENU_LEGEND_LOCKED="Gesperrt"
 
 # === SCHRITTSPERRE ===
 MSG_STEP_LOCKED="Schritt gesperrt - autoclean.conf bearbeiten zum Aendern"
+MSG_NOTIFIER_LOCKED="Benachrichtigung gesperrt - autoclean.conf bearbeiten zum Aendern"
 
 # === HILFESYSTEM ===
 MENU_HELP_TITLE="HILFE"

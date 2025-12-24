@@ -117,6 +117,7 @@ MENU_LEGEND_LOCKED="Bloqueado"
 
 # === BLOQUEO DE PASOS ===
 MSG_STEP_LOCKED="Paso bloqueado - edita autoclean.conf para cambiar"
+MSG_NOTIFIER_LOCKED="Notificador bloqueado - edita autoclean.conf para cambiar"
 
 # === SISTEMA DE AYUDA ===
 MENU_HELP_TITLE="AYUDA"

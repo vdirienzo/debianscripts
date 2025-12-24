@@ -19,6 +19,7 @@ Collection of maintenance and update scripts for Debian/Ubuntu based distributio
   - [Installation and Usage](#installation-and-usage)
   - [Advanced Configuration](#advanced-configuration)
   - [Step Locking](#step-locking)
+  - [Notifier Locking](#notifier-locking)
   - [Predefined Profiles](#predefined-profiles)
   - [Screenshots](#screenshots)
   - [Interactive Menu](#interactive-menu)
@@ -353,6 +354,35 @@ All 23 steps can be locked:
 | `LOCK_STEP_CHECK_LOGROTATE` | Lock logrotate check |
 | `LOCK_STEP_CHECK_INODES` | Lock inode check |
 | `LOCK_STEP_CHECK_REBOOT` | Lock reboot check |
+
+---
+
+## Notifier Locking
+
+Similar to step locking, notifiers can be **locked** to prevent accidental changes in the notifications menu.
+
+### How to Lock a Notifier
+
+Edit `autoclean.conf` and set the corresponding `LOCK_NOTIFIER_*` variable to `1`:
+
+```bash
+# NOTIFIER LOCKS
+# Set to 1 to prevent notifier from being changed via menu
+LOCK_NOTIFIER_TELEGRAM=1    # Telegram notifications locked
+LOCK_NOTIFIER_EMAIL=1       # Email notifications locked
+```
+
+### Available Notifier Lock Variables
+
+| Variable | Description |
+|----------|-------------|
+| `LOCK_NOTIFIER_DESKTOP` | Lock desktop notifications |
+| `LOCK_NOTIFIER_TELEGRAM` | Lock Telegram notifications |
+| `LOCK_NOTIFIER_NTFY` | Lock ntfy.sh notifications |
+| `LOCK_NOTIFIER_WEBHOOK` | Lock webhook notifications |
+| `LOCK_NOTIFIER_EMAIL` | Lock email notifications |
+
+Locked notifiers appear as `[#]` in red in the notifications menu and cannot be toggled with SPACE.
 
 ---
 
@@ -878,10 +908,12 @@ See the [LICENSE](LICENSE) file for details.
 
 ### New Features (December 2025 - Latest)
 - **Step Locking System** - Lock individual steps via `autoclean.conf` to prevent accidental changes from menu
+- **Notifier Locking System** - Lock individual notifiers via `autoclean.conf` to prevent accidental changes
 - **LOCK_STEP_* variables** - 23 lock variables to control which steps can be modified
-- **Visual lock indicator** - Locked steps show as `[#]` in red, disabled steps show as `[ ]` in gray
+- **LOCK_NOTIFIER_* variables** - 5 lock variables for notifiers (desktop, telegram, ntfy, webhook, email)
+- **Visual lock indicator** - Locked items show as `[#]` in red in both menus
 - **Select All respects locks** - `[S]` key ignores locked steps when toggling
-- **Lock help documentation** - New help section in all 6 languages explaining step locking
+- **Lock help documentation** - New help sections in all 6 languages for step and notifier locking
 - **Toggle select/deselect all** (`[S]`) - Press S to toggle all steps on/off (replaces A/N)
 - **Multi-language notifier help** - Help for notifiers now supports all 6 languages with English fallback
 - **Help files for notifiers** - New `plugins/help/help_notif_*.lang` files for each language

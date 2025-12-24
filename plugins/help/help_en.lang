@@ -362,3 +362,30 @@ USE CASES:
 - Production servers: lock STEP_CLEANUP_DOCKER to protect containers
 - Shared systems: lock STEP_CLEANUP_SESSIONS to protect other users
 - Safety: lock steps you never want to run accidentally"
+
+HELP_LOCKED_NOTIFIERS="LOCKED NOTIFIERS
+
+WHAT IT IS:
+Notifiers can be locked in the configuration file to prevent accidental activation.
+
+HOW TO LOCK A NOTIFIER:
+Edit autoclean.conf and set:
+  LOCK_NOTIFIER_TELEGRAM=1
+
+Visual indicator:
+  [#] = Locked notifier (shown in red)
+
+BEHAVIOR:
+- Locked notifiers appear with [#] in the notifications menu
+- Cannot be toggled with SPACE
+- Locks are saved with configuration
+
+HOW TO UNLOCK:
+Set the lock variable to 0 or remove it from config file.
+
+AVAILABLE LOCKS:
+- LOCK_NOTIFIER_DESKTOP
+- LOCK_NOTIFIER_TELEGRAM
+- LOCK_NOTIFIER_NTFY
+- LOCK_NOTIFIER_WEBHOOK
+- LOCK_NOTIFIER_EMAIL"

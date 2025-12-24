@@ -244,6 +244,18 @@ LOCK_STEP_CHECK_LOGROTATE=0
 LOCK_STEP_CHECK_INODES=0
 LOCK_STEP_CHECK_REBOOT=0
 
+# ============================================================================
+# NOTIFIER LOCKS - Prevent notifiers from being changed via menu
+# ============================================================================
+# Set to 1 in autoclean.conf to lock a notifier (cannot be toggled in menu)
+# When locked, the notifier keeps the state defined in NOTIFICATIONS section
+# Locked notifiers appear as [#] in the notifications menu
+LOCK_NOTIFIER_DESKTOP=0
+LOCK_NOTIFIER_TELEGRAM=0
+LOCK_NOTIFIER_NTFY=0
+LOCK_NOTIFIER_WEBHOOK=0
+LOCK_NOTIFIER_EMAIL=0
+
 # Systemd Timer scheduling variables
 SCHEDULE_MODE=""             # Mode: daily, weekly, monthly
 UNSCHEDULE=false             # Flag to remove timer
@@ -454,6 +466,15 @@ is_step_locked() {
     [ "${!lock_var}" = "1" ]
 }
 
+# Check if a notifier is locked in configuration
+# Usage: is_notifier_locked "desktop"
+# Returns: 0 if locked, 1 if not locked
+is_notifier_locked() {
+    local notifier_code="$1"
+    local lock_var="LOCK_NOTIFIER_${notifier_code^^}"
+    [ "${!lock_var}" = "1" ]
+}
+
 save_config() {
     # Save current step states and preferences to configuration file
     # SECURITY: Create file with restrictive permissions from the start (avoid race condition)
@@ -553,6 +574,22 @@ NOTIF_HEADER
         local enabled="${NOTIFIER_ENABLED[$code]:-0}"
         echo "NOTIFIER_${code^^}_ENABLED=$enabled" >> "$CONFIG_FILE"
     done
+
+    # Add notifier locks section
+    cat >> "$CONFIG_FILE" << EOF
+
+# ============================================================================
+# NOTIFIER LOCKS
+# ============================================================================
+# Set to 1 to LOCK a notifier (cannot be toggled in menu)
+# When locked, the notifier keeps the state defined in NOTIFICATIONS above
+# Locked notifiers appear as [#] in the notifications menu
+LOCK_NOTIFIER_DESKTOP=$LOCK_NOTIFIER_DESKTOP
+LOCK_NOTIFIER_TELEGRAM=$LOCK_NOTIFIER_TELEGRAM
+LOCK_NOTIFIER_NTFY=$LOCK_NOTIFIER_NTFY
+LOCK_NOTIFIER_WEBHOOK=$LOCK_NOTIFIER_WEBHOOK
+LOCK_NOTIFIER_EMAIL=$LOCK_NOTIFIER_EMAIL
+EOF
 
     # Save specific configuration for each notifier
     # Telegram
@@ -824,6 +861,18 @@ LOCK_STEP_CLEANUP_SESSIONS=0
 LOCK_STEP_CHECK_LOGROTATE=0
 LOCK_STEP_CHECK_INODES=0
 LOCK_STEP_CHECK_REBOOT=0
+
+# ============================================================================
+# NOTIFIER LOCKS
+# ============================================================================
+# Set to 1 to LOCK a notifier (cannot be toggled in menu)
+# When locked, the notifier keeps the state defined in NOTIFICATIONS section
+# Locked notifiers appear as [#] in the notifications menu
+LOCK_NOTIFIER_DESKTOP=0
+LOCK_NOTIFIER_TELEGRAM=0
+LOCK_NOTIFIER_NTFY=0
+LOCK_NOTIFIER_WEBHOOK=0
+LOCK_NOTIFIER_EMAIL=0
 EOF
 
     local result=$?
@@ -1686,9 +1735,15 @@ show_notification_menu() {
         for code in "${AVAILABLE_NOTIFIERS[@]}"; do
             local name="${NOTIFIER_NAMES[$i]}"
             local enabled="${NOTIFIER_ENABLED[$code]:-0}"
+            local is_locked=0
+            is_notifier_locked "$code" && is_locked=1
             local status_icon status_color
 
-            if [ "$enabled" = "1" ]; then
+            if [ $is_locked -eq 1 ]; then
+                # LOCKED: [#] in red
+                status_icon="[#]"
+                status_color="$RED"
+            elif [ "$enabled" = "1" ]; then
                 status_icon="[x]"
                 status_color="$GREEN"
             else
@@ -1700,9 +1755,17 @@ show_notification_menu() {
             [ $i -eq $selected ] && prefix=">"
 
             if [ $i -eq $selected ]; then
-                print_box_line "${BRIGHT_CYAN}${prefix}${status_icon} ${name}${BOX_NC}"
+                if [ $is_locked -eq 1 ]; then
+                    print_box_line "${RED}${prefix}${status_icon}${BOX_NC} ${DIM}${name}${BOX_NC}"
+                else
+                    print_box_line "${BRIGHT_CYAN}${prefix}${status_icon} ${name}${BOX_NC}"
+                fi
             else
-                print_box_line " ${status_color}${status_icon}${BOX_NC} ${name}"
+                if [ $is_locked -eq 1 ]; then
+                    print_box_line " ${RED}${status_icon}${BOX_NC} ${DIM}${name}${BOX_NC}"
+                else
+                    print_box_line " ${status_color}${status_icon}${BOX_NC} ${name}"
+                fi
             fi
             ((i++))
         done
@@ -1712,6 +1775,7 @@ show_notification_menu() {
         local current_desc="${NOTIFIER_DESCRIPTIONS[$selected]}"
         print_box_line "${CYAN}>${BOX_NC} ${current_desc:0:68}"
         print_box_sep
+        print_box_center "${GREEN}[x]${BOX_NC}=${MENU_LEGEND_ON:-On} ${DIM}[ ]${BOX_NC}=${MENU_LEGEND_OFF:-Off} ${RED}[#]${BOX_NC}=${MENU_LEGEND_LOCKED:-Locked}"
         print_box_line "${CYAN}[SPACE]${BOX_NC} ${MENU_NOTIF_TOGGLE:-Toggle} ${CYAN}[C]${BOX_NC} ${MENU_NOTIF_CONFIG:-Config} ${CYAN}[T]${BOX_NC} ${MENU_NOTIF_TEST:-Test} ${CYAN}[H]${BOX_NC} ${MENU_NOTIF_HELP_KEY:-Help} ${CYAN}[S]${BOX_NC} ${MENU_SAVE:-Save} ${CYAN}[ESC]${BOX_NC} ${MENU_BACK:-Back}"
         print_box_bottom
 
@@ -1739,7 +1803,12 @@ show_notification_menu() {
         elif [[ "$key" == " " ]]; then
             # Toggle enabled/disabled
             local code="${AVAILABLE_NOTIFIERS[$selected]}"
-            if [ "${NOTIFIER_ENABLED[$code]}" = "1" ]; then
+            if is_notifier_locked "$code"; then
+                # Show locked message
+                tput cup $(($(tput lines) - 2)) 0 2>/dev/null
+                printf "${RED}${MSG_NOTIFIER_LOCKED:-Notifier locked - edit autoclean.conf to change}${NC}"
+                sleep 1.5
+            elif [ "${NOTIFIER_ENABLED[$code]}" = "1" ]; then
                 NOTIFIER_ENABLED["$code"]=0
             else
                 NOTIFIER_ENABLED["$code"]=1

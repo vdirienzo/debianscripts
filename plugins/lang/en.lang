@@ -118,6 +118,7 @@ MENU_LEGEND_LOCKED="Locked"
 
 # === STEP LOCKING ===
 MSG_STEP_LOCKED="Step locked - edit autoclean.conf to change"
+MSG_NOTIFIER_LOCKED="Notifier locked - edit autoclean.conf to change"
 
 # === HELP SYSTEM ===
 MENU_HELP_TITLE="HELP"

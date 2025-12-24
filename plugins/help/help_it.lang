@@ -349,3 +349,30 @@ CASI D'USO:
 - Server produzione: bloccare STEP_CLEANUP_DOCKER per proteggere i container
 - Sistemi condivisi: bloccare STEP_CLEANUP_SESSIONS per proteggere altri utenti
 - Sicurezza: bloccare passaggi che non vuoi mai eseguire accidentalmente"
+
+HELP_LOCKED_NOTIFIERS="NOTIFICATORI BLOCCATI
+
+COS'E:
+I notificatori possono essere bloccati nel file di configurazione per prevenire l'attivazione accidentale.
+
+COME BLOCCARE UN NOTIFICATORE:
+Modifica autoclean.conf e imposta:
+  LOCK_NOTIFIER_TELEGRAM=1
+
+Indicatore visivo:
+  [#] = Notificatore bloccato (mostrato in rosso)
+
+COMPORTAMENTO:
+- I notificatori bloccati appaiono con [#] nel menu notifiche
+- Non possono essere modificati con SPAZIO
+- I blocchi vengono salvati con la configurazione
+
+COME SBLOCCARE:
+Imposta la variabile di blocco a 0 o rimuovila dal file di config.
+
+BLOCCHI DISPONIBILI:
+- LOCK_NOTIFIER_DESKTOP
+- LOCK_NOTIFIER_TELEGRAM
+- LOCK_NOTIFIER_NTFY
+- LOCK_NOTIFIER_WEBHOOK
+- LOCK_NOTIFIER_EMAIL"

@@ -88,6 +88,7 @@ MENU_LEGEND_LOCKED="Verrouille"
 
 # === VERROUILLAGE DES ETAPES ===
 MSG_STEP_LOCKED="Etape verrouillee - modifiez autoclean.conf pour changer"
+MSG_NOTIFIER_LOCKED="Notificateur verrouille - modifiez autoclean.conf pour changer"
 
 # === SYSTEME D'AIDE ===
 MENU_HELP_TITLE="AIDE"

@@ -349,3 +349,30 @@ CAS D'UTILISATION:
 - Serveurs production: verrouiller STEP_CLEANUP_DOCKER pour proteger les conteneurs
 - Systemes partages: verrouiller STEP_CLEANUP_SESSIONS pour proteger les autres utilisateurs
 - Securite: verrouiller les etapes que vous ne voulez jamais executer accidentellement"
+
+HELP_LOCKED_NOTIFIERS="NOTIFICATEURS VERROUILLES
+
+QU'EST-CE QUE C'EST:
+Les notificateurs peuvent etre verrouilles dans le fichier de configuration pour empecher l'activation accidentelle.
+
+COMMENT VERROUILLER UN NOTIFICATEUR:
+Modifiez autoclean.conf et configurez:
+  LOCK_NOTIFIER_TELEGRAM=1
+
+Indicateur visuel:
+  [#] = Notificateur verrouille (affiche en rouge)
+
+COMPORTEMENT:
+- Les notificateurs verrouilles apparaissent avec [#] dans le menu de notifications
+- Ne peuvent pas etre modifies avec ESPACE
+- Les verrous sont sauvegardes avec la configuration
+
+COMMENT DEVERROUILLER:
+Configurez la variable de verrouillage a 0 ou supprimez-la du fichier de config.
+
+VERROUS DISPONIBLES:
+- LOCK_NOTIFIER_DESKTOP
+- LOCK_NOTIFIER_TELEGRAM
+- LOCK_NOTIFIER_NTFY
+- LOCK_NOTIFIER_WEBHOOK
+- LOCK_NOTIFIER_EMAIL"

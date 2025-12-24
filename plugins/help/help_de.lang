@@ -349,3 +349,30 @@ ANWENDUNGSFAELLE:
 - Produktionsserver: STEP_CLEANUP_DOCKER sperren um Container zu schuetzen
 - Gemeinsame Systeme: STEP_CLEANUP_SESSIONS sperren um andere Benutzer zu schuetzen
 - Sicherheit: Schritte sperren, die Sie niemals versehentlich ausfuehren moechten"
+
+HELP_LOCKED_NOTIFIERS="GESPERRTE BENACHRICHTIGUNGEN
+
+WAS ES IST:
+Benachrichtigungen koennen in der Konfigurationsdatei gesperrt werden, um versehentliche Aktivierung zu verhindern.
+
+WIE MAN EINE BENACHRICHTIGUNG SPERRT:
+Bearbeiten Sie autoclean.conf und setzen Sie:
+  LOCK_NOTIFIER_TELEGRAM=1
+
+Visueller Indikator:
+  [#] = Gesperrte Benachrichtigung (in rot angezeigt)
+
+VERHALTEN:
+- Gesperrte Benachrichtigungen erscheinen mit [#] im Benachrichtigungsmenu
+- Koennen nicht mit LEERTASTE umgeschaltet werden
+- Sperren werden mit der Konfiguration gespeichert
+
+WIE MAN ENTSPERRT:
+Setzen Sie die Sperrvariable auf 0 oder entfernen Sie sie aus der Config-Datei.
+
+VERFUEGBARE SPERREN:
+- LOCK_NOTIFIER_DESKTOP
+- LOCK_NOTIFIER_TELEGRAM
+- LOCK_NOTIFIER_NTFY
+- LOCK_NOTIFIER_WEBHOOK
+- LOCK_NOTIFIER_EMAIL"
